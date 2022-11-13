@@ -129,7 +129,7 @@ class MultiHeadGraphAttention(keras.layers.Layer):
         # Activate and return node states
         return  tf.nn.relu(outputs)
 
-
+# TODO implement this model
 class GAT(keras.Model):
     def __init__(
         self,
@@ -153,38 +153,3 @@ class GAT(keras.Model):
             x = attention_layer([x, edges]) + x
         outputs = self.output_layer(x)
         return outputs
-
-    # def train_step(self, data):
-    #     indices, labels = data
-
-    #     with tf.GradientTape() as tape:
-    #         # Forward pass
-    #         outputs = self([self.node_states, self.edges])
-    #         # Compute loss
-    #         loss = self.compiled_loss(labels, tf.gather(outputs, indices))
-    #     # Compute gradients
-    #     grads = tape.gradient(loss, self.trainable_weights)
-    #     # Apply gradients (update weights)
-    #     optimizer.apply_gradients(zip(grads, self.trainable_weights))
-    #     # Update metric(s)
-    #     self.compiled_metrics.update_state(labels, tf.gather(outputs, indices))
-
-    #     return {m.name: m.result() for m in self.metrics}
-
-    # def predict_step(self, data):
-    #     indices = data
-    #     # Forward pass
-    #     outputs = self([self.node_states, self.edges])
-    #     # Compute probabilities
-    #     return tf.nn.softmax(tf.gather(outputs, indices))
-
-    # def test_step(self, data):
-    #     indices, labels = data
-    #     # Forward pass
-    #     outputs = self([self.node_states, self.edges])
-    #     # Compute loss
-    #     loss = self.compiled_loss(labels, tf.gather(outputs, indices))
-    #     # Update metric(s)
-    #     self.compiled_metrics.update_state(labels, tf.gather(outputs, indices))
-
-    #     return {m.name: m.result() for m in self.metrics}
