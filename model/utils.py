@@ -181,8 +181,4 @@ class InstanceLoader:
         
         self.tdL = self._p / self.L
         
-class ALBSolver:
-    
-    def __init__(self, instance):
-        self.instance = InstanceLoader(name=instance)
         
