@@ -1,0 +1,526 @@
+No.,trickiness,graph,time,RL,algo_T,algo_F,algo_L,algo_tdL,algo_tdS,algo_pw,LB,UB
+1,extremely tricky,BN,bimodal,24,24,24,24,24,24,24,23,23
+2,tricky,BN,bimodal,21,21,21,21,21,21,21,21,21
+3,tricky,BN,bimodal,20,20,20,20,20,20,20,20,20
+4,extremely tricky,BN,bimodal,25,24,25,25,24,24,24,24,24
+5,very tricky,BN,bimodal,22,22,23,22,22,22,22,22,22
+6,extremely tricky,BN,bimodal,22,23,22,23,23,23,22,22,22
+7,very tricky,BN,bimodal,26,26,26,26,26,26,26,26,26
+8,extremely tricky,BN,bimodal,25,24,25,25,24,24,24,24,24
+9,extremely tricky,BN,bimodal,24,24,24,24,24,24,24,23,23
+10,tricky,BN,bimodal,23,22,22,22,22,22,22,22,22
+11,extremely tricky,BN,bimodal,24,24,25,25,24,24,25,24,24
+12,extremely tricky,BN,bimodal,26,26,26,26,26,26,26,25,25
+13,extremely tricky,BN,bimodal,25,24,26,25,24,24,25,24,24
+14,extremely tricky,BN,bimodal,21,21,21,21,21,21,21,20,20
+15,tricky,BN,bimodal,24,24,24,24,24,24,24,24,24
+16,tricky,BN,bimodal,23,23,23,24,23,23,23,23,23
+17,extremely tricky,BN,bimodal,22,22,23,22,22,22,22,21,21
+18,extremely tricky,BN,bimodal,20,20,20,20,20,20,20,19,19
+19,extremely tricky,BN,bimodal,23,23,23,24,23,23,23,23,23
+20,less tricky,BN,bimodal,21,21,21,21,21,21,21,21,21
+21,extremely tricky,BN,bimodal,22,21,21,21,21,21,21,21,21
+22,extremely tricky,BN,bimodal,25,25,25,25,25,25,25,24,24
+23,very tricky,BN,bimodal,24,24,25,24,24,24,24,24,24
+24,tricky,BN,bimodal,25,24,25,25,24,24,24,24,24
+25,extremely tricky,BN,bimodal,23,23,23,23,22,23,23,22,22
+26,extremely tricky,BN,peak at the bottom,15,15,15,15,15,15,15,14,14
+27,extremely tricky,BN,peak at the bottom,14,14,14,14,14,14,14,13,13
+28,extremely tricky,BN,peak at the bottom,15,15,15,15,15,15,15,14,14
+29,extremely tricky,BN,peak at the bottom,15,15,15,15,15,15,15,14,14
+30,less tricky,BN,peak at the bottom,15,15,15,15,15,15,15,15,15
+31,less tricky,BN,peak at the bottom,14,14,14,14,14,14,15,14,14
+32,less tricky,BN,peak at the bottom,14,14,14,14,14,14,14,14,14
+33,less tricky,BN,peak at the bottom,15,15,15,15,15,15,15,15,15
+34,less tricky,BN,peak at the bottom,15,15,15,15,15,15,15,15,15
+35,tricky,BN,peak at the bottom,16,15,15,16,15,15,15,15,15
+36,extremely tricky,BN,peak at the bottom,15,15,15,15,15,15,15,14,14
+37,less tricky,BN,peak at the bottom,14,14,14,14,14,14,14,14,14
+38,tricky,BN,peak at the bottom,14,15,14,14,14,14,14,14,14
+39,less tricky,BN,peak at the bottom,14,14,14,14,14,14,14,14,14
+40,very tricky,BN,peak at the bottom,15,15,15,14,15,15,15,14,14
+41,less tricky,BN,peak at the bottom,13,13,13,13,13,13,13,13,13
+42,tricky,BN,peak at the bottom,14,14,14,15,14,14,14,14,14
+43,extremely tricky,BN,peak at the bottom,15,15,15,15,15,15,15,14,14
+44,less tricky,BN,peak at the bottom,14,14,14,14,14,14,14,14,14
+45,less tricky,BN,peak at the bottom,14,14,14,14,14,14,14,14,14
+46,less tricky,BN,peak at the bottom,14,14,14,14,14,14,14,14,14
+47,tricky,BN,peak at the bottom,14,14,15,15,14,14,15,14,14
+48,less tricky,BN,peak at the bottom,15,15,15,15,15,15,15,15,15
+49,less tricky,BN,peak at the bottom,14,14,14,14,14,14,14,14,14
+50,less tricky,BN,peak at the bottom,14,14,14,14,14,14,14,14,14
+51,extremely tricky,BN,peak in the middle,54,55,55,53,51,51,55,48,51
+52,extremely tricky,BN,peak in the middle,56,55,57,57,54,54,56,52,54
+53,extremely tricky,BN,peak in the middle,55,52,54,56,53,53,53,52,53
+54,extremely tricky,BN,peak in the middle,55,53,55,55,52,52,54,51,52
+55,extremely tricky,BN,peak in the middle,57,56,58,58,53,53,57,52,54
+56,extremely tricky,BN,peak in the middle,58,55,56,56,54,55,55,51,53
+57,open (not known yet),BN,peak in the middle,59,57,62,61,55,55,60,53,58
+58,extremely tricky,BN,peak in the middle,60,58,61,61,58,58,60,56,58
+59,extremely tricky,BN,peak in the middle,60,59,61,61,59,59,61,57,57
+60,open (not known yet),BN,peak in the middle,59,58,57,57,59,58,57,53,57
+61,extremely tricky,BN,peak in the middle,58,57,61,60,56,56,59,54,54
+62,extremely tricky,BN,peak in the middle,57,53,57,57,53,54,57,50,53
+63,extremely tricky,BN,peak in the middle,66,63,63,64,63,64,63,61,61
+64,extremely tricky,BN,peak in the middle,61,59,59,60,58,57,58,55,56
+65,extremely tricky,BN,peak in the middle,67,63,65,65,62,63,66,61,61
+66,extremely tricky,BN,peak in the middle,55,55,55,56,52,53,53,50,52
+67,extremely tricky,BN,peak in the middle,61,57,59,58,57,57,59,54,56
+68,extremely tricky,BN,peak in the middle,61,59,59,60,57,57,58,57,57
+69,extremely tricky,BN,peak in the middle,57,57,59,59,55,55,57,53,55
+70,extremely tricky,BN,peak in the middle,58,56,61,60,54,55,59,51,56
+71,extremely tricky,BN,peak in the middle,61,56,57,56,56,56,57,52,53
+72,extremely tricky,BN,peak in the middle,58,55,61,58,55,54,60,52,56
+73,extremely tricky,BN,peak in the middle,61,58,61,61,59,59,60,55,58
+74,extremely tricky,BN,peak in the middle,57,53,55,55,53,53,53,50,52
+75,extremely tricky,BN,peak in the middle,61,57,60,59,57,57,57,54,55
+76,extremely tricky,BN,bimodal,23,24,24,24,23,23,23,23,23
+77,extremely tricky,BN,bimodal,20,21,20,21,21,21,20,20,20
+78,extremely tricky,BN,bimodal,22,22,22,23,22,22,22,21,21
+79,extremely tricky,BN,bimodal,21,21,22,22,21,21,21,21,21
+80,extremely tricky,BN,bimodal,23,23,23,23,23,23,23,22,22
+81,extremely tricky,BN,bimodal,21,21,21,21,21,21,21,20,20
+82,extremely tricky,BN,bimodal,22,22,22,21,22,22,21,21,21
+83,very tricky,BN,bimodal,23,23,22,22,22,22,22,22,22
+84,extremely tricky,BN,bimodal,28,27,29,28,28,27,28,26,27
+85,extremely tricky,BN,bimodal,26,25,25,26,25,25,25,24,24
+86,extremely tricky,BN,bimodal,25,23,24,24,23,23,24,23,23
+87,very tricky,BN,bimodal,22,22,22,22,22,22,22,22,22
+88,extremely tricky,BN,bimodal,24,24,24,24,24,24,24,23,23
+89,extremely tricky,BN,bimodal,25,25,25,25,25,25,24,24,24
+90,extremely tricky,BN,bimodal,21,21,21,21,21,21,21,20,20
+91,extremely tricky,BN,bimodal,26,25,26,26,25,25,25,25,25
+92,extremely tricky,BN,bimodal,25,24,25,25,24,24,24,24,24
+93,open (not known yet),BN,bimodal,28,28,29,28,28,28,28,27,28
+94,extremely tricky,BN,bimodal,23,23,23,23,23,23,23,22,22
+95,extremely tricky,BN,bimodal,22,22,22,22,22,22,22,21,21
+96,extremely tricky,BN,bimodal,22,22,22,22,22,22,22,21,21
+97,extremely tricky,BN,bimodal,23,23,23,23,23,22,22,22,22
+98,extremely tricky,BN,bimodal,23,23,22,22,22,22,22,22,22
+99,very tricky,BN,bimodal,23,22,22,23,22,22,22,22,22
+100,extremely tricky,BN,bimodal,26,26,26,26,26,26,26,25,25
+101,extremely tricky,BN,peak at the bottom,16,16,16,16,16,16,16,15,15
+102,less tricky,BN,peak at the bottom,14,14,14,14,14,14,14,14,14
+103,less tricky,BN,peak at the bottom,14,14,14,14,14,14,14,14,14
+104,tricky,BN,peak at the bottom,14,14,14,14,14,14,14,14,14
+105,less tricky,BN,peak at the bottom,13,13,13,13,13,13,13,13,13
+106,less tricky,BN,peak at the bottom,14,14,14,14,14,14,14,14,14
+107,less tricky,BN,peak at the bottom,14,14,14,14,14,14,14,14,14
+108,extremely tricky,BN,peak at the bottom,15,15,15,15,15,15,15,14,14
+109,less tricky,BN,peak at the bottom,15,15,15,15,15,15,15,15,15
+110,tricky,BN,peak at the bottom,14,13,13,13,13,13,13,13,13
+111,less tricky,BN,peak at the bottom,16,16,16,16,16,16,16,16,16
+112,extremely tricky,BN,peak at the bottom,14,14,14,14,14,14,14,13,13
+113,less tricky,BN,peak at the bottom,14,14,14,14,14,14,14,14,14
+114,very tricky,BN,peak at the bottom,14,14,14,14,13,13,13,13,13
+115,tricky,BN,peak at the bottom,14,14,14,14,14,14,14,14,14
+116,very tricky,BN,peak at the bottom,17,17,17,17,16,16,16,16,16
+117,extremely tricky,BN,peak at the bottom,16,16,16,16,16,16,16,15,15
+118,less tricky,BN,peak at the bottom,15,15,15,15,15,15,15,15,15
+119,less tricky,BN,peak at the bottom,14,14,14,14,14,14,14,14,14
+120,less tricky,BN,peak at the bottom,14,14,14,14,14,14,14,14,14
+121,less tricky,BN,peak at the bottom,15,15,15,15,15,15,15,15,15
+122,less tricky,BN,peak at the bottom,13,13,13,13,13,13,13,13,13
+123,less tricky,BN,peak at the bottom,15,15,15,15,15,15,15,15,15
+124,extremely tricky,BN,peak at the bottom,16,16,16,16,16,16,16,15,15
+125,less tricky,BN,peak at the bottom,14,14,14,14,14,14,14,14,14
+126,extremely tricky,BN,peak in the middle,55,54,56,55,53,53,55,49,54
+127,extremely tricky,BN,peak in the middle,58,55,58,58,54,56,58,50,54
+128,extremely tricky,BN,peak in the middle,61,61,61,61,60,60,60,56,59
+129,extremely tricky,BN,peak in the middle,60,56,60,59,56,56,58,53,56
+130,extremely tricky,BN,peak in the middle,60,57,59,59,57,58,57,52,56
+131,extremely tricky,BN,peak in the middle,58,55,57,57,55,54,56,50,54
+132,extremely tricky,BN,peak in the middle,61,63,62,62,60,60,61,56,59
+133,extremely tricky,BN,peak in the middle,61,61,58,59,58,58,58,53,56
+134,extremely tricky,BN,peak in the middle,58,57,59,59,57,56,57,52,58
+135,extremely tricky,BN,peak in the middle,60,59,59,59,58,58,59,53,58
+136,extremely tricky,BN,peak in the middle,57,54,60,59,55,54,59,49,54
+137,open (not known yet),BN,peak in the middle,59,57,60,60,57,56,59,50,57
+138,extremely tricky,BN,peak in the middle,62,58,62,62,59,60,61,56,57
+139,extremely tricky,BN,peak in the middle,55,55,55,56,55,54,54,50,52
+140,extremely tricky,BN,peak in the middle,59,56,59,60,57,57,57,54,57
+141,extremely tricky,BN,peak in the middle,54,53,55,55,52,52,54,49,51
+142,extremely tricky,BN,peak in the middle,60,59,57,58,59,59,57,52,57
+143,extremely tricky,BN,peak in the middle,58,55,56,57,55,55,56,51,52
+144,extremely tricky,BN,peak in the middle,52,50,51,52,50,50,50,47,49
+145,extremely tricky,BN,peak in the middle,61,59,61,61,59,60,61,53,58
+146,extremely tricky,BN,peak in the middle,57,54,55,56,53,53,54,53,53
+147,extremely tricky,BN,peak in the middle,66,61,64,64,61,65,63,58,62
+148,extremely tricky,BN,peak in the middle,60,57,58,56,54,54,57,50,54
+149,extremely tricky,BN,peak in the middle,61,58,58,58,57,58,57,54,57
+150,extremely tricky,BN,peak in the middle,62,60,60,60,59,59,59,54,58
+151,extremely tricky,CH,bimodal,22,22,22,22,22,22,22,21,21
+152,extremely tricky,CH,bimodal,22,22,23,23,22,22,23,22,22
+153,tricky,CH,bimodal,21,21,22,21,21,21,21,21,21
+154,tricky,CH,bimodal,25,25,25,26,25,25,25,25,25
+155,very tricky,CH,bimodal,23,22,22,22,22,22,22,22,22
+156,very tricky,CH,bimodal,23,23,23,24,23,23,24,23,23
+157,extremely tricky,CH,bimodal,27,26,26,26,27,26,26,26,26
+158,tricky,CH,bimodal,23,23,23,24,23,23,23,23,23
+159,tricky,CH,bimodal,19,19,19,20,19,19,19,19,19
+160,extremely tricky,CH,bimodal,23,22,23,23,22,22,23,22,22
+161,extremely tricky,CH,bimodal,23,23,23,24,23,23,23,22,22
+162,extremely tricky,CH,bimodal,23,23,23,23,23,23,23,22,22
+163,very tricky,CH,bimodal,26,25,25,26,25,25,25,25,25
+164,very tricky,CH,bimodal,24,23,24,24,23,24,23,23,23
+165,extremely tricky,CH,bimodal,26,25,26,25,25,25,25,24,24
+166,extremely tricky,CH,bimodal,25,25,25,25,24,24,25,24,24
+167,tricky,CH,bimodal,22,22,22,22,22,22,22,22,22
+168,extremely tricky,CH,bimodal,22,22,22,22,22,22,22,21,21
+169,very tricky,CH,bimodal,22,21,22,22,21,21,22,21,21
+170,extremely tricky,CH,bimodal,25,25,25,25,25,25,25,24,24
+171,extremely tricky,CH,bimodal,25,25,26,25,25,25,25,24,24
+172,extremely tricky,CH,bimodal,24,24,25,25,24,24,24,24,24
+173,open (not known yet),CH,bimodal,26,26,25,26,25,25,25,24,25
+174,extremely tricky,CH,bimodal,23,23,23,23,23,23,23,22,22
+175,open (not known yet),CH,bimodal,27,27,27,28,27,27,27,26,27
+176,tricky,CH,peak at the bottom,13,13,14,13,13,13,13,13,13
+177,tricky,CH,peak at the bottom,14,14,14,14,14,14,14,14,14
+178,less tricky,CH,peak at the bottom,15,15,15,15,15,15,15,15,15
+179,less tricky,CH,peak at the bottom,15,15,15,15,15,15,15,15,15
+180,less tricky,CH,peak at the bottom,15,15,15,15,15,15,15,15,15
+181,very tricky,CH,peak at the bottom,14,13,13,14,13,13,13,13,13
+182,less tricky,CH,peak at the bottom,15,15,15,15,15,15,15,15,15
+183,less tricky,CH,peak at the bottom,14,14,14,14,14,14,14,14,14
+184,less tricky,CH,peak at the bottom,14,14,14,14,14,14,14,14,14
+185,less tricky,CH,peak at the bottom,15,15,15,15,15,15,15,15,15
+186,extremely tricky,CH,peak at the bottom,15,15,15,15,15,15,15,14,14
+187,extremely tricky,CH,peak at the bottom,14,14,14,14,14,14,14,13,13
+188,less tricky,CH,peak at the bottom,16,16,16,17,16,16,16,16,16
+189,less tricky,CH,peak at the bottom,14,14,14,14,14,14,14,14,14
+190,extremely tricky,CH,peak at the bottom,14,13,14,14,13,13,14,13,13
+191,less tricky,CH,peak at the bottom,14,14,14,14,14,14,14,14,14
+192,extremely tricky,CH,peak at the bottom,14,14,14,14,14,14,14,13,13
+193,tricky,CH,peak at the bottom,16,15,15,15,15,15,15,15,15
+194,tricky,CH,peak at the bottom,15,15,15,16,15,15,16,15,15
+195,less tricky,CH,peak at the bottom,15,15,15,15,15,15,15,15,15
+196,less tricky,CH,peak at the bottom,15,15,15,16,15,15,15,15,15
+197,less tricky,CH,peak at the bottom,15,15,15,15,15,15,15,15,15
+198,extremely tricky,CH,peak at the bottom,14,14,14,14,14,14,14,13,13
+199,tricky,CH,peak at the bottom,14,14,14,14,14,14,14,14,14
+200,tricky,CH,peak at the bottom,15,15,16,16,15,15,16,15,15
+201,extremely tricky,CH,peak in the middle,58,55,58,58,54,54,57,52,54
+202,extremely tricky,CH,peak in the middle,64,63,67,66,62,61,67,61,62
+203,extremely tricky,CH,peak in the middle,56,53,56,57,54,53,55,52,53
+204,extremely tricky,CH,peak in the middle,54,52,54,53,52,52,54,49,51
+205,extremely tricky,CH,peak in the middle,63,59,63,60,58,58,60,56,58
+206,extremely tricky,CH,peak in the middle,56,53,56,55,52,53,56,50,54
+207,extremely tricky,CH,peak in the middle,56,53,55,56,52,52,54,50,52
+208,open (not known yet),CH,peak in the middle,64,60,60,61,60,60,60,56,60
+209,extremely tricky,CH,peak in the middle,58,58,62,62,57,57,59,54,56
+210,extremely tricky,CH,peak in the middle,57,55,57,58,53,53,56,51,53
+211,extremely tricky,CH,peak in the middle,56,55,56,55,53,54,53,51,53
+212,extremely tricky,CH,peak in the middle,59,55,57,58,54,54,57,51,53
+213,extremely tricky,CH,peak in the middle,60,56,58,58,54,54,57,51,54
+214,open (not known yet),CH,peak in the middle,59,56,58,57,55,56,57,53,56
+215,extremely tricky,CH,peak in the middle,51,51,54,53,50,50,53,47,49
+216,extremely tricky,CH,peak in the middle,54,54,57,57,55,54,57,51,53
+217,extremely tricky,CH,peak in the middle,57,55,57,59,54,54,55,51,53
+218,open (not known yet),CH,peak in the middle,58,57,59,60,55,56,60,52,56
+219,extremely tricky,CH,peak in the middle,55,54,56,56,54,54,55,51,53
+220,extremely tricky,CH,peak in the middle,60,55,60,59,54,55,60,52,54
+221,extremely tricky,CH,peak in the middle,62,58,63,62,57,57,62,56,57
+222,extremely tricky,CH,peak in the middle,61,57,59,59,56,55,58,51,55
+223,extremely tricky,CH,peak in the middle,57,54,56,55,53,53,55,50,53
+224,extremely tricky,CH,peak in the middle,61,57,62,62,57,57,62,55,56
+225,extremely tricky,CH,peak in the middle,59,58,56,57,57,57,56,51,55
+226,extremely tricky,CH,bimodal,25,25,26,25,25,26,25,24,24
+227,open (not known yet),CH,bimodal,28,27,28,28,27,27,28,26,27
+228,extremely tricky,CH,bimodal,23,23,23,23,23,23,23,22,22
+229,extremely tricky,CH,bimodal,25,25,25,25,25,25,25,24,24
+230,extremely tricky,CH,bimodal,25,25,24,24,24,24,24,23,23
+231,extremely tricky,CH,bimodal,23,23,23,23,23,23,23,22,22
+232,very tricky,CH,bimodal,23,22,23,23,22,22,23,22,22
+233,extremely tricky,CH,bimodal,23,23,24,24,23,23,23,22,22
+234,extremely tricky,CH,bimodal,24,23,23,23,23,24,23,23,23
+235,extremely tricky,CH,bimodal,27,27,28,27,27,27,28,26,26
+236,extremely tricky,CH,bimodal,24,23,24,24,23,23,24,22,22
+237,extremely tricky,CH,bimodal,24,24,24,24,23,23,24,23,23
+238,extremely tricky,CH,bimodal,24,24,24,24,24,24,24,23,23
+239,tricky,CH,bimodal,21,21,22,22,21,21,21,21,21
+240,extremely tricky,CH,bimodal,23,23,23,23,23,23,23,22,22
+241,extremely tricky,CH,bimodal,23,23,23,23,23,23,23,22,22
+242,extremely tricky,CH,bimodal,24,24,24,24,24,24,24,23,23
+243,extremely tricky,CH,bimodal,24,24,24,24,24,24,24,23,23
+244,extremely tricky,CH,bimodal,22,22,22,22,22,22,22,21,21
+245,open (not known yet),CH,bimodal,25,24,25,25,24,24,25,23,24
+246,extremely tricky,CH,bimodal,27,27,27,27,27,27,27,26,26
+247,extremely tricky,CH,bimodal,23,23,23,23,23,23,23,22,22
+248,extremely tricky,CH,bimodal,20,20,21,20,20,20,20,19,19
+249,extremely tricky,CH,bimodal,22,22,22,22,22,22,22,21,21
+250,extremely tricky,CH,bimodal,25,25,25,24,25,25,25,24,24
+251,less tricky,CH,peak at the bottom,15,15,15,15,15,15,15,15,15
+252,very tricky,CH,peak at the bottom,14,15,15,15,15,14,15,14,14
+253,tricky,CH,peak at the bottom,15,14,15,15,14,14,15,14,14
+254,tricky,CH,peak at the bottom,14,14,14,14,14,14,14,14,14
+255,less tricky,CH,peak at the bottom,14,14,14,14,14,14,14,14,14
+256,less tricky,CH,peak at the bottom,15,15,15,15,15,15,15,15,15
+257,extremely tricky,CH,peak at the bottom,13,13,13,13,13,13,13,12,12
+258,extremely tricky,CH,peak at the bottom,15,15,15,15,15,15,15,14,14
+259,extremely tricky,CH,peak at the bottom,16,15,16,16,16,16,16,15,15
+260,less tricky,CH,peak at the bottom,15,15,15,15,15,15,15,15,15
+261,less tricky,CH,peak at the bottom,14,14,14,14,14,14,14,14,14
+262,less tricky,CH,peak at the bottom,14,14,14,14,14,14,14,14,14
+263,less tricky,CH,peak at the bottom,14,14,14,14,14,14,14,14,14
+264,less tricky,CH,peak at the bottom,16,15,15,15,15,15,15,15,15
+265,less tricky,CH,peak at the bottom,14,14,14,14,14,14,14,14,14
+266,extremely tricky,CH,peak at the bottom,14,14,14,14,14,14,14,13,13
+267,tricky,CH,peak at the bottom,14,13,13,13,13,13,13,13,13
+268,less tricky,CH,peak at the bottom,15,15,15,15,15,15,15,15,15
+269,less tricky,CH,peak at the bottom,15,15,15,15,15,15,15,15,15
+270,tricky,CH,peak at the bottom,13,13,13,13,13,13,13,13,13
+271,extremely tricky,CH,peak at the bottom,14,14,14,14,14,14,14,13,13
+272,tricky,CH,peak at the bottom,15,14,14,14,14,14,14,14,14
+273,extremely tricky,CH,peak at the bottom,14,14,14,14,14,14,14,13,13
+274,extremely tricky,CH,peak at the bottom,14,14,14,14,14,14,14,13,13
+275,less tricky,CH,peak at the bottom,13,13,13,13,13,13,13,13,13
+276,open (not known yet),CH,peak in the middle,67,64,65,64,64,64,65,58,63
+277,open (not known yet),CH,peak in the middle,63,61,62,62,60,62,62,53,61
+278,open (not known yet),CH,peak in the middle,64,62,62,62,62,60,61,55,60
+279,open (not known yet),CH,peak in the middle,61,56,60,61,57,58,60,52,58
+280,extremely tricky,CH,peak in the middle,59,57,59,60,58,59,58,51,57
+281,extremely tricky,CH,peak in the middle,69,65,68,67,64,64,68,59,64
+282,open (not known yet),CH,peak in the middle,66,62,66,66,61,63,67,57,63
+283,extremely tricky,CH,peak in the middle,61,56,59,59,57,59,58,53,57
+284,extremely tricky,CH,peak in the middle,60,59,59,60,58,58,59,54,56
+285,open (not known yet),CH,peak in the middle,61,59,60,60,58,57,59,52,57
+286,open (not known yet),CH,peak in the middle,61,59,62,63,59,60,60,55,60
+287,extremely tricky,CH,peak in the middle,61,56,59,59,56,57,59,53,56
+288,open (not known yet),CH,peak in the middle,60,60,63,63,59,59,64,53,59
+289,open (not known yet),CH,peak in the middle,68,65,66,66,63,63,66,61,65
+290,open (not known yet),CH,peak in the middle,61,57,61,61,57,59,62,52,59
+291,extremely tricky,CH,peak in the middle,57,57,57,57,58,58,56,49,53
+292,extremely tricky,CH,peak in the middle,63,62,64,64,62,62,65,55,58
+293,open (not known yet),CH,peak in the middle,56,56,57,56,55,56,57,50,56
+294,extremely tricky,CH,peak in the middle,63,59,64,65,59,60,65,54,58
+295,open (not known yet),CH,peak in the middle,66,62,63,63,60,62,62,55,60
+296,extremely tricky,CH,peak in the middle,61,59,62,61,59,59,61,53,58
+297,open (not known yet),CH,peak in the middle,66,62,64,63,63,63,64,54,61
+298,extremely tricky,CH,peak in the middle,67,63,64,63,61,63,65,57,59
+299,extremely tricky,CH,peak in the middle,60,57,61,61,57,57,60,54,56
+300,open (not known yet),CH,peak in the middle,61,58,61,60,56,56,59,51,57
+301,extremely tricky,MIXED,bimodal,24,24,24,24,23,23,24,23,23
+302,extremely tricky,MIXED,bimodal,25,24,25,25,24,24,25,24,24
+303,extremely tricky,MIXED,bimodal,25,24,25,25,24,24,25,24,24
+304,extremely tricky,MIXED,bimodal,22,21,22,22,21,21,22,21,21
+305,very tricky,MIXED,bimodal,22,22,23,23,22,22,22,22,22
+306,very tricky,MIXED,bimodal,24,24,24,25,24,24,25,24,24
+307,extremely tricky,MIXED,bimodal,24,24,24,24,24,24,24,23,23
+308,extremely tricky,MIXED,bimodal,21,21,21,21,21,21,21,20,20
+309,extremely tricky,MIXED,bimodal,22,22,22,23,22,22,22,21,21
+310,extremely tricky,MIXED,bimodal,24,23,24,24,23,23,24,23,23
+311,tricky,MIXED,bimodal,21,21,21,21,21,21,22,21,21
+312,tricky,MIXED,bimodal,22,22,22,22,22,22,22,22,22
+313,extremely tricky,MIXED,bimodal,23,23,24,25,23,23,25,23,23
+314,very tricky,MIXED,bimodal,20,19,19,20,19,19,20,19,19
+315,extremely tricky,MIXED,bimodal,23,23,23,23,23,23,23,22,22
+316,tricky,MIXED,bimodal,25,24,24,24,24,24,24,24,24
+317,extremely tricky,MIXED,bimodal,26,26,27,27,26,26,26,26,26
+318,extremely tricky,MIXED,bimodal,22,21,21,22,21,21,24,21,21
+319,extremely tricky,MIXED,bimodal,24,24,24,24,23,23,24,23,23
+320,very tricky,MIXED,bimodal,23,22,23,23,22,22,22,22,22
+321,very tricky,MIXED,bimodal,26,26,27,26,26,26,26,26,26
+322,extremely tricky,MIXED,bimodal,24,24,24,25,24,24,24,23,23
+323,extremely tricky,MIXED,bimodal,25,24,25,25,24,24,24,24,24
+324,extremely tricky,MIXED,bimodal,23,23,24,24,23,23,23,23,23
+325,extremely tricky,MIXED,bimodal,26,26,26,26,26,26,26,25,25
+326,tricky,MIXED,peak at the bottom,13,13,13,14,13,13,13,13,13
+327,very tricky,MIXED,peak at the bottom,15,14,14,15,14,14,15,14,14
+328,extremely tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,14,14
+329,less tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,14,14
+330,extremely tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,14,14
+331,very tricky,MIXED,peak at the bottom,14,14,14,15,14,14,15,14,14
+332,less tricky,MIXED,peak at the bottom,15,14,14,14,14,14,14,14,14
+333,tricky,MIXED,peak at the bottom,15,15,15,16,15,15,15,15,15
+334,extremely tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,14,14
+335,less tricky,MIXED,peak at the bottom,13,13,13,13,13,13,13,13,13
+336,very tricky,MIXED,peak at the bottom,15,15,15,16,15,15,16,15,15
+337,extremely tricky,MIXED,peak at the bottom,14,14,14,14,13,13,14,13,13
+338,extremely tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,14,14
+339,tricky,MIXED,peak at the bottom,14,15,15,15,14,14,14,14,14
+340,less tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,14,14
+341,less tricky,MIXED,peak at the bottom,16,16,16,16,16,16,16,16,16
+342,extremely tricky,MIXED,peak at the bottom,15,14,15,15,14,14,15,14,14
+343,less tricky,MIXED,peak at the bottom,16,17,16,16,16,17,17,16,16
+344,less tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,15,15
+345,less tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,14,14
+346,less tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,14,14
+347,less tricky,MIXED,peak at the bottom,14,14,14,14,14,14,15,14,14
+348,less tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,14,14
+349,less tricky,MIXED,peak at the bottom,13,13,13,13,13,13,13,13,13
+350,tricky,MIXED,peak at the bottom,14,14,14,15,14,14,15,14,14
+351,extremely tricky,MIXED,peak in the middle,67,60,64,63,60,59,63,58,60
+352,extremely tricky,MIXED,peak in the middle,67,64,65,65,63,63,65,63,63
+353,extremely tricky,MIXED,peak in the middle,61,58,56,56,55,55,55,50,54
+354,extremely tricky,MIXED,peak in the middle,55,53,55,56,53,54,54,51,54
+355,extremely tricky,MIXED,peak in the middle,60,58,60,60,57,58,58,53,55
+356,extremely tricky,MIXED,peak in the middle,64,61,63,64,61,62,62,59,61
+357,extremely tricky,MIXED,peak in the middle,58,57,59,59,55,57,56,53,53
+358,extremely tricky,MIXED,peak in the middle,58,54,57,57,54,54,56,51,54
+359,extremely tricky,MIXED,peak in the middle,60,54,58,57,54,54,57,52,54
+360,extremely tricky,MIXED,peak in the middle,61,57,61,60,58,55,60,54,57
+361,extremely tricky,MIXED,peak in the middle,55,54,55,54,53,54,53,50,52
+362,extremely tricky,MIXED,peak in the middle,63,58,61,61,59,59,61,57,57
+363,extremely tricky,MIXED,peak in the middle,55,54,56,56,54,53,54,51,53
+364,extremely tricky,MIXED,peak in the middle,56,56,56,56,54,55,56,51,53
+365,extremely tricky,MIXED,peak in the middle,56,55,58,59,53,53,59,52,54
+366,extremely tricky,MIXED,peak in the middle,66,64,63,65,63,63,62,61,61
+367,extremely tricky,MIXED,peak in the middle,62,58,61,61,56,56,61,55,57
+368,extremely tricky,MIXED,peak in the middle,65,61,64,64,59,61,64,58,59
+369,extremely tricky,MIXED,peak in the middle,54,55,57,56,52,52,56,49,52
+370,extremely tricky,MIXED,peak in the middle,63,58,62,61,58,58,62,56,57
+371,extremely tricky,MIXED,peak in the middle,60,56,57,58,54,54,56,51,54
+372,extremely tricky,MIXED,peak in the middle,52,51,54,53,51,51,51,47,49
+373,extremely tricky,MIXED,peak in the middle,56,53,57,57,52,52,57,49,52
+374,extremely tricky,MIXED,peak in the middle,58,58,57,57,55,55,55,51,53
+375,extremely tricky,MIXED,peak in the middle,63,60,62,63,59,59,62,57,57
+376,very tricky,MIXED,bimodal,24,24,24,23,23,23,24,23,23
+377,extremely tricky,MIXED,bimodal,21,21,21,21,21,21,21,20,20
+378,extremely tricky,MIXED,bimodal,23,23,23,23,22,23,23,22,22
+379,extremely tricky,MIXED,bimodal,24,24,24,24,24,24,24,23,23
+380,extremely tricky,MIXED,bimodal,23,23,23,23,23,23,23,22,22
+381,extremely tricky,MIXED,bimodal,25,25,25,25,25,24,25,24,24
+382,extremely tricky,MIXED,bimodal,26,26,26,26,26,26,26,25,25
+383,extremely tricky,MIXED,bimodal,25,25,26,26,25,25,26,25,25
+384,very tricky,MIXED,bimodal,26,26,26,26,25,25,25,25,25
+385,extremely tricky,MIXED,bimodal,22,23,23,23,22,22,23,22,22
+386,extremely tricky,MIXED,bimodal,24,24,24,24,24,24,24,23,23
+387,extremely tricky,MIXED,bimodal,23,23,22,23,22,23,23,22,22
+388,extremely tricky,MIXED,bimodal,28,27,27,27,26,26,27,25,25
+389,tricky,MIXED,bimodal,23,23,23,23,23,23,23,23,23
+390,extremely tricky,MIXED,bimodal,24,23,23,23,23,23,23,22,22
+391,very tricky,MIXED,bimodal,20,20,20,21,20,20,20,20,20
+392,very tricky,MIXED,bimodal,23,22,22,23,22,22,23,22,22
+393,extremely tricky,MIXED,bimodal,25,24,24,24,24,24,24,23,23
+394,extremely tricky,MIXED,bimodal,22,23,22,23,22,22,22,22,22
+395,extremely tricky,MIXED,bimodal,25,25,25,25,25,25,25,24,24
+396,extremely tricky,MIXED,bimodal,21,21,21,21,21,21,21,20,20
+397,open (not known yet),MIXED,bimodal,27,26,26,26,26,26,26,25,26
+398,very tricky,MIXED,bimodal,25,25,26,26,26,25,25,25,25
+399,extremely tricky,MIXED,bimodal,24,23,23,24,23,24,24,23,23
+400,extremely tricky,MIXED,bimodal,25,25,25,25,25,25,25,24,24
+401,very tricky,MIXED,peak at the bottom,16,15,16,16,15,15,16,15,15
+402,very tricky,MIXED,peak at the bottom,16,16,16,16,15,15,15,15,15
+403,extremely tricky,MIXED,peak at the bottom,15,15,15,15,15,14,15,14,14
+404,less tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,15,15
+405,very tricky,MIXED,peak at the bottom,13,13,14,14,13,13,13,13,13
+406,less tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,14,14
+407,tricky,MIXED,peak at the bottom,16,15,15,15,15,15,15,15,15
+408,less tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,14,14
+409,very tricky,MIXED,peak at the bottom,16,15,16,15,15,15,15,15,15
+410,very tricky,MIXED,peak at the bottom,14,14,14,15,14,14,15,14,14
+411,extremely tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,14,14
+412,tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,14,14
+413,less tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,14,14
+414,extremely tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,14,14
+415,extremely tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,13,13
+416,less tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,14,14
+417,less tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,15,15
+418,less tricky,MIXED,peak at the bottom,16,16,16,16,16,16,16,16,16
+419,extremely tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,14,14
+420,less tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,14,14
+421,less tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,14,14
+422,less tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,15,15
+423,extremely tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,14,14
+424,tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,14,14
+425,less tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,15,15
+426,extremely tricky,MIXED,peak in the middle,70,65,64,65,63,62,64,58,63
+427,extremely tricky,MIXED,peak in the middle,60,58,61,60,58,58,61,54,57
+428,extremely tricky,MIXED,peak in the middle,61,58,59,58,58,59,58,54,57
+429,open (not known yet),MIXED,peak in the middle,65,62,64,64,61,61,62,57,61
+430,extremely tricky,MIXED,peak in the middle,59,57,60,61,57,60,60,52,54
+431,extremely tricky,MIXED,peak in the middle,60,59,56,56,56,55,56,52,55
+432,open (not known yet),MIXED,peak in the middle,62,59,60,60,60,60,61,54,59
+433,extremely tricky,MIXED,peak in the middle,59,57,56,56,54,56,55,51,54
+434,open (not known yet),MIXED,peak in the middle,60,60,61,62,60,60,63,55,59
+435,extremely tricky,MIXED,peak in the middle,65,62,61,61,59,60,60,52,58
+436,open (not known yet),MIXED,peak in the middle,56,56,57,57,54,55,57,49,55
+437,extremely tricky,MIXED,peak in the middle,58,58,58,59,55,58,59,51,56
+438,extremely tricky,MIXED,peak in the middle,62,59,58,58,58,57,57,52,57
+439,extremely tricky,MIXED,peak in the middle,63,58,59,59,58,58,59,54,58
+440,extremely tricky,MIXED,peak in the middle,59,57,58,57,56,56,57,51,55
+441,extremely tricky,MIXED,peak in the middle,59,56,58,57,54,55,58,51,54
+442,open (not known yet),MIXED,peak in the middle,58,55,57,56,55,55,56,48,56
+443,extremely tricky,MIXED,peak in the middle,61,58,59,58,58,58,58,53,58
+444,open (not known yet),MIXED,peak in the middle,58,58,56,57,57,55,59,51,56
+445,extremely tricky,MIXED,peak in the middle,61,61,60,61,58,59,59,54,57
+446,extremely tricky,MIXED,peak in the middle,62,61,61,62,60,62,62,54,57
+447,extremely tricky,MIXED,peak in the middle,58,57,61,60,56,58,61,52,55
+448,open (not known yet),MIXED,peak in the middle,61,60,63,64,59,60,62,54,60
+449,open (not known yet),MIXED,peak in the middle,59,57,59,59,57,57,60,52,57
+450,extremely tricky,MIXED,peak in the middle,61,57,61,59,57,58,58,53,53
+451,extremely tricky,MIXED,bimodal,27,27,27,27,27,27,27,26,26
+452,extremely tricky,MIXED,bimodal,23,23,24,24,23,23,23,22,22
+453,very tricky,MIXED,bimodal,25,25,25,25,25,25,25,24,24
+454,very tricky,MIXED,bimodal,24,24,24,24,24,24,24,23,23
+455,extremely tricky,MIXED,bimodal,24,24,24,24,24,24,24,23,23
+456,extremely tricky,MIXED,bimodal,27,27,28,27,27,27,27,26,26
+457,extremely tricky,MIXED,bimodal,24,24,24,24,24,24,24,23,23
+458,extremely tricky,MIXED,bimodal,26,26,25,26,26,25,25,24,24
+459,extremely tricky,MIXED,bimodal,24,24,24,24,24,24,24,23,23
+460,extremely tricky,MIXED,bimodal,24,24,24,24,24,24,23,23,23
+461,extremely tricky,MIXED,bimodal,24,24,25,25,24,24,24,23,23
+462,extremely tricky,MIXED,bimodal,24,24,24,24,24,24,24,23,23
+463,very tricky,MIXED,bimodal,27,27,27,26,27,27,26,26,26
+464,extremely tricky,MIXED,bimodal,26,26,26,27,26,26,25,25,25
+465,extremely tricky,MIXED,bimodal,23,23,24,24,23,23,24,22,22
+466,extremely tricky,MIXED,bimodal,28,27,28,28,27,27,28,26,26
+467,tricky,MIXED,bimodal,21,21,21,21,21,21,21,21,21
+468,very tricky,MIXED,bimodal,25,25,26,25,25,25,25,25,25
+469,very tricky,MIXED,bimodal,22,23,23,23,23,23,22,22,22
+470,very tricky,MIXED,bimodal,26,26,27,27,26,26,26,26,26
+471,very tricky,MIXED,bimodal,26,27,27,27,27,27,26,26,26
+472,extremely tricky,MIXED,bimodal,23,23,24,24,23,24,24,23,23
+473,extremely tricky,MIXED,bimodal,30,29,30,30,29,29,29,28,28
+474,tricky,MIXED,bimodal,24,24,23,24,24,24,23,23,23
+475,tricky,MIXED,bimodal,25,25,24,24,25,25,25,24,24
+476,less tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,14,14
+477,tricky,MIXED,peak at the bottom,15,14,15,15,14,14,14,14,14
+478,tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,14,14
+479,less tricky,MIXED,peak at the bottom,16,16,16,16,16,16,16,16,16
+480,less tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,15,15
+481,extremely tricky,MIXED,peak at the bottom,16,16,16,16,16,16,16,15,15
+482,less tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,15,15
+483,less tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,14,14
+484,tricky,MIXED,peak at the bottom,14,15,14,15,14,14,14,14,14
+485,less tricky,MIXED,peak at the bottom,16,16,16,16,16,16,16,16,16
+486,less tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,15,15
+487,less tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,15,15
+488,less tricky,MIXED,peak at the bottom,16,16,16,16,16,16,16,16,16
+489,extremely tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,13,13
+490,less tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,15,15
+491,less tricky,MIXED,peak at the bottom,16,16,16,16,16,16,16,16,16
+492,extremely tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,14,14
+493,extremely tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,14,14
+494,tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,14,14
+495,less tricky,MIXED,peak at the bottom,15,15,15,15,15,15,15,15,15
+496,extremely tricky,MIXED,peak at the bottom,15,15,15,15,15,14,14,14,14
+497,tricky,MIXED,peak at the bottom,13,13,13,13,13,13,13,13,13
+498,tricky,MIXED,peak at the bottom,14,14,15,15,14,14,14,14,14
+499,very tricky,MIXED,peak at the bottom,15,15,14,15,14,14,14,14,14
+500,less tricky,MIXED,peak at the bottom,14,14,14,14,14,14,14,14,14
+501,extremely tricky,MIXED,peak in the middle,67,66,66,66,65,64,65,58,63
+502,open (not known yet),MIXED,peak in the middle,67,65,70,71,65,66,68,60,67
+503,extremely tricky,MIXED,peak in the middle,65,63,63,63,62,61,63,55,62
+504,open (not known yet),MIXED,peak in the middle,61,62,65,63,60,61,63,55,62
+505,open (not known yet),MIXED,peak in the middle,66,62,64,65,63,63,64,55,62
+506,extremely tricky,MIXED,peak in the middle,62,62,63,62,62,62,63,54,58
+507,open (not known yet),MIXED,peak in the middle,62,62,62,63,62,62,61,55,60
+508,extremely tricky,MIXED,peak in the middle,60,61,59,60,60,60,57,53,56
+509,open (not known yet),MIXED,peak in the middle,60,61,62,62,61,60,62,53,60
+510,open (not known yet),MIXED,peak in the middle,60,61,63,63,61,60,60,54,60
+511,extremely tricky,MIXED,peak in the middle,64,63,63,64,63,62,62,56,59
+512,extremely tricky,MIXED,peak in the middle,65,62,68,68,62,62,65,57,61
+513,open (not known yet),MIXED,peak in the middle,64,63,66,66,63,63,65,55,63
+514,open (not known yet),MIXED,peak in the middle,61,59,64,62,59,59,62,54,60
+515,extremely tricky,MIXED,peak in the middle,65,63,66,66,63,63,65,56,63
+516,extremely tricky,MIXED,peak in the middle,72,72,71,72,72,72,70,67,70
+517,extremely tricky,MIXED,peak in the middle,64,63,66,66,63,63,64,57,62
+518,extremely tricky,MIXED,peak in the middle,60,60,64,64,60,59,60,51,58
+519,extremely tricky,MIXED,peak in the middle,64,65,68,67,65,65,65,57,63
+520,extremely tricky,MIXED,peak in the middle,63,62,65,64,61,61,63,54,62
+521,open (not known yet),MIXED,peak in the middle,73,73,71,71,72,70,71,65,70
+522,open (not known yet),MIXED,peak in the middle,62,61,64,63,60,60,62,54,60
+523,open (not known yet),MIXED,peak in the middle,58,58,61,61,58,58,60,52,58
+524,extremely tricky,MIXED,peak in the middle,61,60,65,63,60,60,61,53,59
+525,open (not known yet),MIXED,peak in the middle,62,62,64,62,62,62,63,55,62
