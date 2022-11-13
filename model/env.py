@@ -82,7 +82,7 @@ class ALBEnv(gym.Env):
             else:
                 job_cntr = 1
                 self.state['num_station'] += 1
-                reward -= 100 * (self.instance.cycle_time - self.state['station_load'])
+                reward -= (self.instance.cycle_time - self.state['station_load'])
                 self.state['station_load'] = self.job_time[action]
                 
                 if self.record_soln:
@@ -97,7 +97,7 @@ class ALBEnv(gym.Env):
         if self.state['prec_mask'].sum() == 0:
             self.solution_memory.append(self.station_memory)
             self.episode_done = True
-            reward -= 100 * self.state['num_station']
+            reward -= 2 * self.state['num_station']
             return self.state, reward, self.episode_done, {}
             
         return self.state, reward, self.episode_done, {}
