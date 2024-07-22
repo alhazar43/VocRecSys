@@ -42,12 +42,13 @@ class PPOAgent:
 
     def choose_action(self, observation, use_mask=True):
         
-        state = observation['graph']
-        edges = tf.where(state)
+        state = observation['user_quest'], observation['user_job']
+    
         
         
-        feat = tf.transpose(tf.convert_to_tensor([observation['job_time'], observation['successor']]))
-        logits = tf.transpose(self.actor((feat, edges)))
+        combined_attn = tf.transpose(tf.convert_to_tensor([observation['user_quest'], observation['user_job']]))
+        
+        # logits = tf.transpose(self.actor((feat, edges)))
         
         
         if use_mask:
