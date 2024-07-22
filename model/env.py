@@ -1,51 +1,54 @@
 
 import os
 import re
-from cv2 import DISOpticalFlow_create
 
-import gym
+import gynasium as gym
 import numpy as np
 from gym import spaces
 from utils import InstanceLoader
+from IRT import (
+    irt_model_1pl, 
+    irt_model_2pl, 
+    irt_model_3pl, 
+    irt_model_3pl_hierarchical
+    )
 
 
-class ALBEnv(gym.Env):
-
-    def __init__(self, instance, reset_after_done=False, record_soln=False):
+class QuestEnv(gym.Env):
+    def __init__(self) -> None:
         super().__init__()
-        self.instance_name = instance
-        self.instance = InstanceLoader(self.instance_name)
-        self.diag = np.diag_indices(self.instance.num_jobs)
-        self.prec = np.array(self.instance.precedence)
-        self.job_time = np.array(self.instance.processing_time)
-        self.fols = np.array(self.instance.IF_bar)
-        self.pres = np.array(self.instance.tdL)
-        self.graph = np.array(self.instance.G)
-        self.pw = np.array(self.instance.pw)
+        
+
+class QuestEnv(gym.Env):
+
+    def __init__(self, static, user_quest, user_job, response, feedback, difficulty, discrim, quest_model=irt_model_3pl, reset_after_done=False, record_soln=False):
+        super().__init__()
+        self.static = static
+        self.user_quset = user_quest
+        self.user_job = user_job
+        self.quest_model = quest_model
+        self.response = response
+        self.feedback = feedback
+        self.difficulty, self.discrim = irt_model_2pl(self.user_quest[:,0], self.user_quset[:,1:])
+        self.reward = []
         
         
         self.observation_space = spaces.Dict(
-            precedence=spaces.Box(low=-self.prec, high=self.prec, dtype=np.int32),
-            job_time=spaces.Box(low=-self.job_time, high=self.job_time, dtype=np.int32),
-            prec_mask=spaces.Box(low=np.zeros(self.instance.num_jobs), high=np.ones(self.instance.num_jobs), dtype=np.bool_),
-            graph=spaces.Box(shape=(self.instance.num_jobs, self.instance.num_jobs), low=0, high=1),
-            station_load=spaces.Discrete(1),
-            num_station=spaces.Discrete(1)
+            ability=spaces.Box(low=0, high=10, dtype=int),
+            category=spaces.Box(low=0, high=10, dtype=int),
+            value=spaces.Box(low=0.0, high=5.0, dtype=float),
+            response=spaces.Box(dtype=float),
+            feedback=spaces.Box(dtype=bool)
         )
         
-        self.station_memory = []
         self.solution_memory = []
         self.action_space = spaces.Discrete(self.instance.num_jobs)
         
         self.state = {
-            'precedence': np.array(self.prec, dtype=np.int32),
-            'job_time': np.array(self.job_time, dtype=np.int32),
-            'prec_mask': np.array(self.prec==0, dtype=np.bool_),
-            'successor' : np.array(self.fols, dtype=np.int32),
-            'predcessor' : np.array(self.pres, dtype=np.int32),
-            'graph': np.array(self.graph, dtype=np.int),
-            'station_load': 0,
-            'num_station': 1
+            'quest': np.array(self.user_quset),
+            'job':np.array(self.user_job),
+            'feedback':np.array(self.feedback)
+
         }            
         self.record_soln = record_soln
         
@@ -54,77 +57,44 @@ class ALBEnv(gym.Env):
         self.reset_after_done = reset_after_done
 
 
-    def get_mask(self):
-        return np.array(self.state[:-1]==0, dtype=bool)
+    # def get_mask(self):
+    #     return np.array(self.state[:-1]==0, dtype=bool)
     
 
-    def step(self, action):
+    def step(self, action, rec_prob):
         if self.reset_after_done and self.episode_done:
             self.reset()
-        
-        reward = 0.0
-        job_cntr = 0
-        if self.state['precedence'][action]==0:
-            self.state['precedence'][action] = -1
-            # self.state['job_time'][action] = -1
+        q_act, j_act = action
 
-            self.state['precedence'][self.instance.F[action]] -= self.job_time[action]
-            self.state['prec_mask'][action] = False
-            self.state['graph'][action,:] = 0
-            reward +=   self.job_time[action]*max(1, self.instance.IF_bar[action])
-            if self.state['station_load'] + self.job_time[action] <= self.instance.cycle_time:
-            # if self.state['precedence'][-1] + self.job_time[action] <= self.instance.cycle_time:
-                self.state['station_load'] += self.job_time[action]
-                job_cntr += 1
-                
-                if self.record_soln and not self.episode_done:
-                    self.station_memory.append(action)
-            else:
-                job_cntr = 1
-                self.state['num_station'] += 1
-                reward -= (self.instance.cycle_time - self.state['station_load'])
-                self.state['station_load'] = self.job_time[action]
-                
-                if self.record_soln:
-                    self.solution_memory.append(self.station_memory)
-                    self.station_memory = [action]
-        prec_mask = np.array(self.state['precedence']==0, dtype=np.bool_)
-        cycle_mask = 1000-self.state['station_load']-self.state['job_time']>=0
-        final_mask = np.logical_and(prec_mask, cycle_mask)
-        self.state['prec_mask'] = final_mask if final_mask.sum() > 0 else prec_mask
-        self.state['graph'][self.diag] = 1
-        
-        if self.state['prec_mask'].sum() == 0:
-            self.solution_memory.append(self.station_memory)
-            self.episode_done = True
-            reward -= 2 * self.state['num_station']
-            return self.state, reward, self.episode_done, {}
-            
-        return self.state, reward, self.episode_done, {}
-    
-    def reset(self, new_instance=None):
-        if new_instance:
-            self.instance = InstanceLoader(new_instance)
+        if len(self.reward) > 1:
+            diff = rec_prob - self.reward[-1] + self.feedback
+            self.reward.append(np.where(j_act==1, diff))
         else:
-            self.instance = InstanceLoader(self.instance_name)
+            self.reward.append(rec_prob+ self.feedback)
+
+        self.ability, self.category,self.value = q_act
+
+
     
 
-        self.prec = np.array(self.instance.precedence)
-        self.job_time = np.array(self.instance.processing_time)
-        self.fols = np.array(self.instance.IF_bar)
-        self.pres = np.array(self.instance.tdL)
-        self.graph = np.array(self.instance.G)
+        return self.state, self.reward, self.episode_done, {}
+    
+    def reset(self):
         
+    
+
+        self.user_quset = np.zeros(self.user_quest)
+        self.user_job = np.zeros(self.user_job)
+        self.feedback = np.zeros(self.feedback)
+
         self.state = {
-            'precedence': np.array(self.prec, dtype=np.int32),
-            'job_time': np.array(self.job_time, dtype=np.int32),
-            'prec_mask': np.array(self.prec==0, dtype=np.bool_),
-            'successor' : np.array(self.fols, dtype=np.int32),
-            'predcessor' : np.array(self.pres, dtype=np.int32),
-            'graph': np.array(self.graph, dtype=np.int),
-            'station_load': 0,
-            'num_station': 1
-        }
+            'quest': np.array(self.user_quset),
+            'job':np.array(self.user_job),
+            'feedback':np.array(self.feedback)
+
+        }   
+
+
         self.episode_done = False
         self.station_memory = []
         self.solution_memory = []
