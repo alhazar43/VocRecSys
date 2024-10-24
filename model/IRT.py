@@ -154,4 +154,11 @@ class AdaptiveMIRT:
         res = minimize(self.log_lik, self.est_th, method='L-BFGS-B', bounds=self.bounds)
         self.est_th = res.x[:self.n_traits]
         self.th_hist.append(self.est_th.copy())
-        print(f"Updated Theta: {self.est_th}")
+        if self.verbose:
+            print(f"Updated Theta: {self.est_th}")
+    
+    def _get_theta(self):
+        if len(self.est_th):
+            return self.est_th
+        else:
+            return self.true_th

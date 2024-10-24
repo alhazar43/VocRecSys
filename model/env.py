@@ -1,4 +1,5 @@
 import numpy as np
+from IRT import AdaptiveMIRT
 
 class VocRecEnv:
     def __init__(self, n_items=100, n_traits=6, n_jobs=20, n_adaptive=5, ability_range=[-3, 3]):
@@ -8,7 +9,8 @@ class VocRecEnv:
         self.n_adaptive = n_adaptive
         self.ability_range = ability_range  
         self.ability = np.random.uniform(*ability_range)  
-        self.job_req = np.random.uniform(*ability_range, size=n_jobs) 
+        self.job_req = np.random.uniform(*ability_range, size=n_jobs)
+        self.test =  AdaptiveMIRT()
 
     def reset(self):
         
@@ -22,8 +24,11 @@ class VocRecEnv:
 
       
         feedback = self._generate_user_feedback(job_rank)
-        self.ability = self._get_ability()
+        self.ability = self.test._get_theta()
+        next = self.test.next_item()
+        resp = self.test.sim_resp()
         
+        self.test.update_theta()
         reward = self._calculate_reward(feedback, job_rank)
         
         next_state = self._get_observation()
@@ -31,11 +36,7 @@ class VocRecEnv:
         
         return next_state, reward, done, {}
     
-    def _get_ability(self):
-        return
-    
-    def _get_next_question(self):
-        return 
+
 
     def _get_observation(self):
         # State includes ability and course difficulties
