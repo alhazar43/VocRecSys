@@ -1,438 +1,157 @@
-import os
 import numpy as np
+from scipy.special import expit
+from scipy.optimize import minimize
+import matplotlib.pyplot as plt
 
-import torch
-import torch.nn as nn
-from torch.nn import init
-import torch.nn.functional as F
+class AdaptiveMIRT:
+    def __init__(self, n_items=1000, n_traits=6, n_steps=5, probs=None, verbose=False):
+        if probs is None:
+            probs = [0.4, 0.2, 0.2, 0.1, 0.1]
+        self.verbose = verbose
+        item_opts = ['likert', 'binary', 'value', 'mc_single', 'mc_multi']
+        self.item_types = np.random.choice(item_opts, size=n_items, p=probs)
+        self.n_items = n_items
+        self.n_traits = n_traits
+        self.n_steps = n_steps
+        self.true_th = np.random.uniform(-3, 3, size=n_traits)
+        self.est_th = np.zeros(n_traits)
+        self.th_hist = []
+        self.a_params = np.random.randn(n_items, n_traits)
+        self.thresholds = [np.sort(np.random.uniform(-2, 2, size=4)) for _ in range(n_items)]
+        self.bin_b = np.random.randn(n_items)
+        self.val_thresh = np.sort(np.random.uniform(-2, 2, size=5))
+        self.mc_params = np.random.randn(n_items, n_traits, 4)
+        self.sel_items = []
+        self.responses = []
+        self.info_gain = []
+        self.bounds = [(-3, 3)] * n_traits
+        self.last_item = None
 
-import pyro
-import pyro.poutine as poutine
-from pyro.optim import Adam
-import pyro.distributions as dist
-from pyro.nn import AutoRegressiveNN
-from pyro.distributions import TransformedDistribution
-from pyro.distributions.transforms import affine_autoregressive
-
-from utils import product_of_experts, multivariate_product_of_experts
-from torch_core import (
-    AbilityInferenceNetwork,
-    ConditionalAbilityInferenceNetwork,
-    ItemInferenceNetwork,
-    LinkedIRT,
-    ResidualIRT,
-    DeepIRT
-)
-
-
-def irt_model_1pl(
-        ability_dim, 
-        num_person, 
-        num_item, 
-        device, 
-        response = None, 
-        mask = None, 
-        annealing_factor = 1,
-        nonlinear = False,
-    ):
-    ability_prior = dist.Normal(
-        torch.zeros((num_person, ability_dim), device=device), 
-        torch.ones((num_person, ability_dim), device=device),
-    )
-    with poutine.scale(scale=annealing_factor):
-        ability = pyro.sample("ability", ability_prior)
-
-    item_feat_prior = dist.Normal(
-        torch.zeros((num_item, 1), device=device), 
-        torch.ones((num_item, 1), device=device),
-    )
-    item_feat = pyro.sample("item_feat", item_feat_prior)
-    difficulty = item_feat
-
-    logit = (torch.sum(ability, dim=1, keepdim=True) + difficulty.T).unsqueeze(2)
-    
-    if nonlinear:
-        logit = torch.pow(logit, 2)
-
-    response_mu = torch.sigmoid(logit)
-
-    if mask is not None:
-        response_dist = dist.Bernoulli(response_mu).mask(mask)
-    else:
-        response_dist = dist.Bernoulli(response_mu)
-
-    if response is not None:
-        pyro.sample("response", response_dist, obs=response)
-    else:
-        response = pyro.sample("response", response_dist)
-        return response, ability, item_feat
-
-
-def irt_model_2pl(
-        ability_dim, 
-        num_person, 
-        num_item, 
-        device, 
-        response = None, 
-        mask = None, 
-        annealing_factor = 1,
-        nonlinear = False,
-    ):
-    ability_prior = dist.Normal(
-        torch.zeros((num_person, ability_dim), device=device), 
-        torch.ones((num_person, ability_dim), device=device),
-    )
-    with poutine.scale(scale=annealing_factor):
-        ability = pyro.sample("ability", ability_prior)
-
-    item_feat_prior = dist.Normal(
-        torch.zeros((num_item, ability_dim + 1), device=device),
-        torch.ones((num_item, ability_dim + 1), device=device),
-    )
-    with poutine.scale(scale=annealing_factor):
-        item_feat = pyro.sample("item_feat", item_feat_prior)
-
-    discrimination, difficulty = item_feat[:, :ability_dim], item_feat[:, ability_dim:]
-
-    logit = (torch.mm(ability, -discrimination.T) + difficulty.T).unsqueeze(2)
-
-    if nonlinear:
-        logit = torch.pow(logit, 2)
-
-    response_mu = torch.sigmoid(logit)
-
-    if mask is not None:
-        response_dist = dist.Bernoulli(response_mu).mask(mask)
-    else:
-        response_dist = dist.Bernoulli(response_mu)
-
-    if response is not None:
-        pyro.sample("response", response_dist, obs=response)
-    else:
-        response = pyro.sample("response", response_dist)
-        return response, ability, item_feat
-
-
-def irt_model_3pl(
-        ability_dim, 
-        num_person, 
-        num_item, 
-        device, 
-        response = None, 
-        mask = None, 
-        annealing_factor = 1,
-        nonlinear = False,
-    ):
-    ability_prior = dist.Normal(
-        torch.zeros((num_person, ability_dim), device=device), 
-        torch.ones((num_person, ability_dim), device=device),
-    )
-    with poutine.scale(scale=annealing_factor):
-        ability = pyro.sample("ability", ability_prior)
-
-    item_feat_prior = dist.Normal(
-        torch.zeros((num_item, ability_dim + 2), device=device),
-        torch.ones((num_item, ability_dim + 2), device=device),
-    )
-    with poutine.scale(scale=annealing_factor):
-        item_feat = pyro.sample("item_feat", item_feat_prior)
-
-    discrimination = item_feat[:, :ability_dim]
-    difficulty = item_feat[:, ability_dim:ability_dim+1]
-    guess_logit = item_feat[:, ability_dim+1:ability_dim+2]
-    guess = torch.sigmoid(guess_logit)
-
-    logit = (torch.mm(ability, -discrimination.T) + difficulty.T).unsqueeze(2)
-
-    if nonlinear:
-        logit = torch.pow(logit, 2)
-
-    guess = guess.unsqueeze(0)  
-    response_mu = guess + (1. - guess) * torch.sigmoid(logit)
-
-    if mask is not None:
-        response_dist = dist.Bernoulli(response_mu).mask(mask)
-    else:
-        response_dist = dist.Bernoulli(response_mu)
-
-    if response is not None:
-        pyro.sample("response", response_dist, obs=response)
-    else:
-        response = pyro.sample("response", response_dist)
-        return response, ability, item_feat
-
-
-def irt_model_3pl_hierarchical(
-        ability_dim, 
-        num_person, 
-        num_item, 
-        device, 
-        response = None, 
-        mask = None, 
-        annealing_factor = 1,
-        num_state = 5,
-    ):
-    """
-    Add a global latent variable over items that allows us 
-    to share statistics over the independent items. We hope
-    this to reduce the amount of data we need to reason about
-    difficulty and discrimination.
-
-    We use a switching state generative model. The global latent
-    variable is categorical and switches between different 
-    item parameters.
-
-    This is not to be used in generating data. It is only to 
-    be used for generative modelling.
-    """
-    ability_prior = dist.Normal(
-        torch.zeros((num_person, ability_dim), device=device), 
-        torch.ones((num_person, ability_dim), device=device),
-    )
-    with poutine.scale(scale=annealing_factor):
-        ability = pyro.sample("ability", ability_prior)
-
-    global_item_feat_prior = dist.Normal(
-        torch.zeros((1, ability_dim + 2), device=device),
-        torch.ones((1, ability_dim + 2), device=device),
-    )
-    with poutine.scale(scale=annealing_factor):
-        global_item_feat = pyro.sample("global_item_feat", global_item_feat_prior)
-        global_item_feat = global_item_feat.repeat(num_item, 1)
-
-    item_feat_prior = dist.Normal(
-        global_item_feat,
-        torch.ones((num_item, ability_dim + 2), device=device),
-    )
-    with poutine.scale(scale=annealing_factor):
-        item_feat = pyro.sample("item_feat", item_feat_prior)
-
-    discrimination = item_feat[:, :ability_dim]
-    difficulty = item_feat[:, ability_dim:ability_dim+1]
-    guess_logit = item_feat[:, ability_dim+1:ability_dim+2]
-    guess = torch.sigmoid(guess_logit)
-
-    logit = (torch.mm(ability, -discrimination.T) + difficulty.T).unsqueeze(2)
-    guess = guess.unsqueeze(0)  
-    response_mu = guess + (1. - guess) * torch.sigmoid(logit)
-
-    if mask is not None:
-        response_dist = dist.Bernoulli(response_mu).mask(mask)
-    else:
-        response_dist = dist.Bernoulli(response_mu)
-
-    if response is not None:
-        pyro.sample("response", response_dist, obs=response)
-    else:
-        response = pyro.sample("response", response_dist)
-        return response, ability, item_feat
-
-
-class VIBO_1PL(nn.Module):
-
-    def __init__(
-            self, 
-            latent_dim, 
-            num_item, 
-            hidden_dim = 16, 
-            ability_merge = 'mean',
-            conditional_posterior = False,
-            generative_model = 'irt',
-            num_iafs = 0, 
-            iaf_dim = 32,
-        ):
-        super().__init__()
-        
-        self.latent_dim            = latent_dim
-        self.ability_dim           = latent_dim
-        self.response_dim          = 1
-        self.hidden_dim            = hidden_dim
-        self.num_item              = num_item
-        self.ability_merge         = ability_merge
-        self.conditional_posterior = conditional_posterior
-        self.generative_model      = generative_model
-        self.num_iafs              = num_iafs
-        self.iaf_dim               = iaf_dim
-
-        self._set_item_feat_dim()
-        self._set_irt_num()
-
-        if self.num_iafs > 0:
-            self.iafs = [
-                affine_autoregressive(self.latent_dim, hidden_dims=[self.iaf_dim])
-                for _ in range(self.num_iafs)
-            ]
-            self.iafs_modules = nn.ModuleList(self.iafs)
-
-        if self.conditional_posterior:
-            self.ability_encoder = ConditionalAbilityInferenceNetwork(
-                self.ability_dim, 
-                self.response_dim, 
-                self.item_feat_dim, 
-                self.hidden_dim, 
-                ability_merge = self.ability_merge,
-            )
+    def log_lik(self, th, item=None):
+        if item is not None:
+            return self._item_log_lik(th, item)
         else:
-            self.ability_encoder = AbilityInferenceNetwork(
-                self.ability_dim, 
-                self.response_dim, 
-                self.hidden_dim, 
-                ability_merge = self.ability_merge,
-            )
+            ll = 0
+            for i, q in enumerate(self.sel_items):
+                ll += self._item_log_lik(th, q, self.responses[i])
+            return -ll
 
-        self.item_encoder = ItemInferenceNetwork(self.num_item, self.item_feat_dim) 
-
-        if self.generative_model == 'link':
-            self.decoder = LinkedIRT(
-                irt_model = f'{self.irt_num}pl',
-                hidden_dim = self.hidden_dim,
-            )
-        elif self.generative_model == 'deep':
-            self.decoder = DeepIRT(
-                self.ability_dim,
-                irt_model = f'{self.irt_num}pl',
-                hidden_dim = self.hidden_dim,
-            )
-        elif self.generative_model == 'residual':
-            self.decoder = ResidualIRT(
-                self.ability_dim,
-                irt_model = f'{self.irt_num}pl',
-                hidden_dim = self.hidden_dim,
-            )
-
-        self.apply(self.weights_init)
-
-    def _set_item_feat_dim(self):
-        self.item_feat_dim = 1
-
-    def _set_irt_num(self):
-        self.irt_num = 1
-   
-    def model(self, response, mask, annealing_factor=1):
-        if self.generative_model == 'irt':
-            irt_model_fn = globals()[f'irt_model_{self.irt_num}pl']
-            return irt_model_fn(
-                self.ability_dim, 
-                response.size(0), 
-                self.num_item, 
-                response.device,
-                response = response, 
-                mask = mask, 
-                annealing_factor = annealing_factor,
-            )
-        else:
-            pyro.module("decoder", self.decoder)
-            
-            ability_prior = dist.Normal(
-                torch.zeros((num_person, ability_dim), device=device), 
-                torch.ones((num_person, ability_dim), device=device),
-            )
-            with poutine.scale(scale=annealing_factor):
-                ability = pyro.sample("ability", ability_prior)
-
-            item_feat_prior = dist.Normal(
-                torch.zeros((num_item, self.item_feat_dim), device=device), 
-                torch.ones((num_item, self.item_feat_dim), device=device),
-            )
-            item_feat = pyro.sample("item_feat", item_feat_prior)
-
-            response_mu = self.decoder(ability, item_feat)
-
-            if mask is not None:
-                response_dist = dist.Bernoulli(response_mu).mask(mask)
+    def _item_log_lik(self, th, item, resp=None):
+        it_type = self.item_types[item]
+        if it_type == "binary":
+            prob = self.bin_prob(self.a_params[item], self.bin_b[item], th)
+            if resp is None:
+                return prob * (1 - prob)
             else:
-                response_dist = dist.Bernoulli(response_mu)
+                prob = np.clip(prob, 1e-8, 1 - 1e-8)
+                return resp * np.log(prob) + (1 - resp) * np.log(1 - prob)
+        elif it_type == "likert":
+            probs = self.gpcm_prob(self.a_params[item], th, self.thresholds[item])
+            return np.sum(probs * (1 - probs)) if resp is None else np.log(probs[resp - 1])
+        elif it_type == "value":
+            probs = self.gpcm_prob(self.a_params[item], th, self.val_thresh)
+            return np.sum(probs * (1 - probs)) if resp is None else np.log(probs[resp])
+        elif it_type == "mc_single":
+            probs = self.mc_single_prob(self.mc_params[item], th)
+            return np.sum(probs * (1 - probs)) if resp is None else np.log(probs[resp])
+        elif it_type == "mc_multi":
+            probs = self.mc_multi_prob(self.mc_params[item], th)
+            return np.sum(probs * (1 - probs)) if resp is None else sum([resp[j] * np.log(probs[j]) + (1 - resp[j]) * np.log(1 - probs[j]) for j in range(len(resp))])
 
-            if response is not None:
-                pyro.sample("response", response_dist, obs=response)
-            else:
-                response = pyro.sample("response", response_dist)
-                return response, ability, item_feat
+    def next_item(self):
+        infos = []
+        for i in range(self.n_items):
+            if i in self.sel_items:
+                infos.append(-np.inf)
+                continue
+            info = self.log_lik(self.est_th, item=i)
+            infos.append(info + np.random.randn() * 0.1)
+        next_item = np.argmax(infos)
+        self.sel_items.append(next_item)
+        self.last_item = next_item
+        if self.verbose:
+            print(f"Selected Item {next_item+1}")
+        return next_item
 
-    def guide(self, response, mask, annealing_factor=1):
-        pyro.module("item_encoder", self.item_encoder)
-        pyro.module("ability_encoder", self.ability_encoder)
-        device = response.device
+    def sim_resp(self):
+        if self.last_item is None:
+            raise ValueError("No item selected.")
+        q = self.last_item
+        it_type = self.item_types[q]
+        if it_type == "binary":
+            prob = self.bin_prob(self.a_params[q], self.bin_b[q], self.true_th)
+            resp = np.random.binomial(1, prob)
+        elif it_type == "likert":
+            probs = self.gpcm_prob(self.a_params[q], self.true_th, self.thresholds[q])
+            resp = np.argmax(np.random.multinomial(1, probs)) + 1
+        elif it_type == "value":
+            probs = self.gpcm_prob(self.a_params[q], self.true_th, self.val_thresh)
+            resp = np.argmax(np.random.multinomial(1, probs))
+        elif it_type == "mc_single":
+            probs = self.mc_single_prob(self.mc_params[q], self.true_th)
+            resp = np.argmax(np.random.multinomial(1, probs))
+        elif it_type == "mc_multi":
+            probs = self.mc_multi_prob(self.mc_params[q], self.true_th)
+            resp = np.random.binomial(1, probs)
+        self.responses.append(resp)
+        self.info_gain.append(self.log_lik(self.est_th, item=q))
+        if self.verbose:
+            print(f"Simulated Response: {resp}, Info Gain: {self.info_gain[-1]}")
+        return resp
 
-        item_domain = torch.arange(self.num_item).unsqueeze(1).to(device)
-        item_feat_mu, item_feat_logvar = self.item_encoder(item_domain)
-        item_feat_scale = torch.exp(0.5 * item_feat_logvar)
+    def bin_prob(self, a, b, th):
+        return expit(np.dot(a, th) - b)
 
-        with poutine.scale(scale=annealing_factor):
-            item_feat = pyro.sample(
-                "item_feat", 
-                dist.Normal(item_feat_mu, item_feat_scale),
-            )
+    def gpcm_prob(self, a, th, thresholds):
+        diff = np.dot(a, th)
+        probs = [1] + [np.exp(diff - thresholds[k]) for k in range(len(thresholds))]
+        return np.array(probs) / np.sum(probs)
 
-        if self.conditional_posterior:
-            ability_mu, ability_logvar = self.ability_encoder(response, mask, item_feat)
-        else:
-            ability_mu, ability_logvar = self.ability_encoder(response, mask)
+    def mc_single_prob(self, a, th):
+        expnt = np.dot(a.T, th)
+        return np.exp(expnt) / np.sum(np.exp(expnt))
 
-        ability_scale = torch.exp(0.5 * ability_logvar)
-        ability_dist = dist.Normal(ability_mu, ability_scale) 
+    def mc_multi_prob(self, a, th):
+        probs = expit(np.dot(a.T, th))
+        return np.clip(probs, 0, 1)
 
-        if self.num_iafs > 0:
-            ability_dist = TransformedDistribution(ability_dist, self.iafs)
-        
-        with poutine.scale(scale=annealing_factor):
-            ability = pyro.sample("ability", ability_dist)
+    def plot_results(self):
+        fig, axs = plt.subplots(4, 1, figsize=(10, 20))
+        axs[0].plot(self.info_gain, marker='o', linestyle='-', color='b')
+        axs[0].set_title("Info Gain During Adaptive Testing")
+        axs[0].set_xlabel("Step")
+        axs[0].set_ylabel("Info Gain")
+        axs[0].grid(True)
+        for i in range(self.n_traits):
+            axs[1].scatter([i+1], [self.true_th[i]], color='green', label='True' if i == 0 else "")
+            axs[1].scatter([i+1], [self.est_th[i]], color='red', label='Est' if i == 0 else "")
+        axs[1].set_title("Final Est. vs True Traits")
+        axs[1].set_xlabel("Trait")
+        axs[1].set_ylabel("Value")
+        axs[1].legend()
+        axs[1].grid(True)
+        from collections import Counter
+        sel_it_types = [self.item_types[q] for q in self.sel_items]
+        it_counts = Counter(sel_it_types)
+        axs[2].bar(it_counts.keys(), it_counts.values(), color=['blue', 'orange', 'green', 'red', 'purple'])
+        axs[2].set_title("Item Types Selected")
+        axs[2].set_xlabel("Type")
+        axs[2].set_ylabel("Count")
+        axs[2].grid(True)
+        th_hist = np.array(self.th_hist)
+        for i in range(self.n_traits):
+            axs[3].plot(th_hist[:, i], label=f"Est. Trait {i+1}")
+            axs[3].axhline(self.true_th[i], color='green', linestyle='--', label=f"True Trait {i+1}" if i == 0 else "")
+        axs[3].set_title("Theta Est. Change vs True Theta")
+        axs[3].set_xlabel("Step")
+        axs[3].set_ylabel("Theta Value")
+        axs[3].legend()
+        axs[3].grid(True)
+        plt.tight_layout()
+        plt.show()
 
-        return ability_mu, ability_logvar, item_feat_mu, item_feat_logvar
-
-    def generate(self, ability, item_feat):
-        difficulty = item_feat
-        logit = (torch.sum(ability, dim=1, keepdim=True) + difficulty.T).unsqueeze(2)
-        response_mu = torch.sigmoid(logit)
-        response_dist = dist.Bernoulli(response_mu)
-        response = pyro.sample("response", response_dist)
-        return response
-
-    @staticmethod
-    def weights_init(m):
-        if isinstance(m, (nn.Linear, nn.Conv2d)):
-            init.xavier_normal_(m.weight.data, gain=init.calculate_gain('relu'))
-            init.constant_(m.bias.data, 0)
-        elif isinstance(m, nn.BatchNorm1d):
-            pass
-
-
-class VIBO_2PL(VIBO_1PL):
-
-    def _set_item_feat_dim(self):
-        self.item_feat_dim = self.latent_dim + 1
-    
-    def _set_irt_num(self):
-        self.irt_num = 2
-
-    def generate(self, ability, item_feat):
-        ability_dim = ability.size(1)
-        discrimination, difficulty = item_feat[:, :ability_dim], item_feat[:, ability_dim:]
-        logit = (torch.mm(ability, -discrimination.T) + difficulty.T).unsqueeze(2)
-        response_mu = torch.sigmoid(logit)
-        response_dist = dist.Bernoulli(response_mu)
-        response = pyro.sample("response", response_dist)
-        return response
-
-
-class VIBO_3PL(VIBO_2PL):
-
-    def _set_item_feat_dim(self):
-        self.item_feat_dim = self.latent_dim + 2
-
-    def _set_irt_num(self):
-        self.irt_num = 3
-
-    def generate(self, ability, item_feat):
-        ability_dim = ability.size(1)
-        discrimination = item_feat[:, :ability_dim]
-        difficulty = item_feat[:, ability_dim:ability_dim+1]
-        guess_logit = item_feat[:, ability_dim+1:ability_dim+2]
-        guess = torch.sigmoid(guess_logit)
-
-        logit = (torch.mm(ability, -discrimination.T) + difficulty.T).unsqueeze(2)
-        guess = guess.unsqueeze(0)
-        response_mu = guess + (1. - guess) * torch.sigmoid(logit)
-        response_dist = dist.Bernoulli(response_mu)
-        response = pyro.sample("response", response_dist)
-        return response
+    def update_theta(self):
+        res = minimize(self.log_lik, self.est_th, method='L-BFGS-B', bounds=self.bounds)
+        self.est_th = res.x[:self.n_traits]
+        self.th_hist.append(self.est_th.copy())
+        print(f"Updated Theta: {self.est_th}")
