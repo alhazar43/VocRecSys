@@ -2,9 +2,11 @@ import numpy as np
 from scipy.special import expit
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
+from collections import Counter
+import os
 
 class AdaptiveMIRT:
-    def __init__(self, n_items=1000, n_traits=6, n_steps=5, probs=None, verbose=False):
+    def __init__(self, select_noise=0.1, n_items=1000, n_traits=6, n_steps=5, probs=None, verbose=False):
         if probs is None:
             probs = [0.4, 0.2, 0.2, 0.1, 0.1]
         self.verbose = verbose
@@ -26,17 +28,18 @@ class AdaptiveMIRT:
         self.info_gain = []
         self.bounds = [(-3, 3)] * n_traits
         self.last_item = None
+        self.select_noise = select_noise
 
-    def log_lik(self, th, item=None):
+    def log_like(self, th, item=None):
         if item is not None:
-            return self._item_log_lik(th, item)
+            return self._item_log_like(th, item)
         else:
             ll = 0
             for i, q in enumerate(self.sel_items):
-                ll += self._item_log_lik(th, q, self.responses[i])
+                ll += self._item_log_like(th, q, self.responses[i])
             return -ll
 
-    def _item_log_lik(self, th, item, resp=None):
+    def _item_log_like(self, th, item, resp=None):
         it_type = self.item_types[item]
         if it_type == "binary":
             prob = self.bin_prob(self.a_params[item], self.bin_b[item], th)
@@ -64,8 +67,8 @@ class AdaptiveMIRT:
             if i in self.sel_items:
                 infos.append(-np.inf)
                 continue
-            info = self.log_lik(self.est_th, item=i)
-            infos.append(info + np.random.randn() * 0.1)
+            info = self.log_like(self.est_th, item=i)
+            infos.append(info + np.random.randn() * self.select_noise)
         next_item = np.argmax(infos)
         self.sel_items.append(next_item)
         self.last_item = next_item
@@ -94,7 +97,7 @@ class AdaptiveMIRT:
             probs = self.mc_multi_prob(self.mc_params[q], self.true_th)
             resp = np.random.binomial(1, probs)
         self.responses.append(resp)
-        self.info_gain.append(self.log_lik(self.est_th, item=q))
+        self.info_gain.append(self.log_like(self.est_th, item=q))
         if self.verbose:
             print(f"Simulated Response: {resp}, Info Gain: {self.info_gain[-1]}")
         return resp
@@ -115,43 +118,8 @@ class AdaptiveMIRT:
         probs = expit(np.dot(a.T, th))
         return np.clip(probs, 0, 1)
 
-    def plot_results(self):
-        fig, axs = plt.subplots(4, 1, figsize=(10, 20))
-        axs[0].plot(self.info_gain, marker='o', linestyle='-', color='b')
-        axs[0].set_title("Info Gain During Adaptive Testing")
-        axs[0].set_xlabel("Step")
-        axs[0].set_ylabel("Info Gain")
-        axs[0].grid(True)
-        for i in range(self.n_traits):
-            axs[1].scatter([i+1], [self.true_th[i]], color='green', label='True' if i == 0 else "")
-            axs[1].scatter([i+1], [self.est_th[i]], color='red', label='Est' if i == 0 else "")
-        axs[1].set_title("Final Est. vs True Traits")
-        axs[1].set_xlabel("Trait")
-        axs[1].set_ylabel("Value")
-        axs[1].legend()
-        axs[1].grid(True)
-        from collections import Counter
-        sel_it_types = [self.item_types[q] for q in self.sel_items]
-        it_counts = Counter(sel_it_types)
-        axs[2].bar(it_counts.keys(), it_counts.values(), color=['blue', 'orange', 'green', 'red', 'purple'])
-        axs[2].set_title("Item Types Selected")
-        axs[2].set_xlabel("Type")
-        axs[2].set_ylabel("Count")
-        axs[2].grid(True)
-        th_hist = np.array(self.th_hist)
-        for i in range(self.n_traits):
-            axs[3].plot(th_hist[:, i], label=f"Est. Trait {i+1}")
-            axs[3].axhline(self.true_th[i], color='green', linestyle='--', label=f"True Trait {i+1}" if i == 0 else "")
-        axs[3].set_title("Theta Est. Change vs True Theta")
-        axs[3].set_xlabel("Step")
-        axs[3].set_ylabel("Theta Value")
-        axs[3].legend()
-        axs[3].grid(True)
-        plt.tight_layout()
-        plt.show()
-
     def update_theta(self):
-        res = minimize(self.log_lik, self.est_th, method='L-BFGS-B', bounds=self.bounds)
+        res = minimize(self.log_like, self.est_th, method='L-BFGS-B', bounds=self.bounds)
         self.est_th = res.x[:self.n_traits]
         self.th_hist.append(self.est_th.copy())
         if self.verbose:
@@ -162,3 +130,70 @@ class AdaptiveMIRT:
             return self.est_th
         else:
             return self.true_th
+        
+
+    def plot_results(self, plot_info=True, plot_theta=True, no_show=False, save_fig=True, save_dir="figure"):
+        if plot_info:
+            fig1, axs1 = plt.subplots(3, 1, figsize=(12, 15))
+            axs1[0].plot(self.info_gain, marker='o', linestyle='-', color='b')
+            axs1[0].set_title(f"Information Gain During Adaptive Testing (noise={self.select_noise})")
+            axs1[0].set_xlabel("Step")
+            axs1[0].set_ylabel("Info Gain")
+            axs1[0].grid(True)
+
+            for i in range(self.n_traits):
+                axs1[1].scatter([i+1], [self.true_th[i]], color='green', label='True' if i == 0 else "")
+                axs1[1].scatter([i+1], [self.est_th[i]], color='red', label='Est' if i == 0 else "")
+            axs1[1].set_title(f"Final Latent Trait Estimates vs. True Traits (noise={self.select_noise})")
+            axs1[1].set_xlabel("Trait Number")
+            axs1[1].set_ylabel("Trait Value")
+            axs1[1].legend()
+            axs1[1].grid(True)
+
+            sel_it_types = [self.item_types[q] for q in self.sel_items]
+            it_counts = Counter(sel_it_types)
+            axs1[2].bar(it_counts.keys(), it_counts.values(), color=['blue', 'orange', 'green', 'red', 'purple'])
+            axs1[2].set_title(f"Distribution of Item Types Selected During Adaptive Testing (noise={self.select_noise})")            
+            axs1[2].set_xlabel("Item Type")
+            axs1[2].set_ylabel("Count of Selected Items")
+            axs1[2].grid(True)
+            fig1.tight_layout()
+            if not no_show:
+                plt.show()
+            plt.close(fig1)
+
+        
+        if plot_theta:
+            n_rows = (self.n_traits + 1) // 2  # Number of rows needed for 3x2 layout
+            fig2, axs2 = plt.subplots(n_rows, 2, figsize=(15, 5 * n_rows))
+            th_hist = np.array(self.th_hist)
+            for i in range(self.n_traits):
+                row, col = divmod(i, 2)
+                axs2[row, col].plot(th_hist[:, i], label=f"Estimated Trait {i+1}")
+                axs2[row, col].axhline(self.true_th[i], color='green', linestyle='--', label=f"True Trait {i+1}")
+                axs2[row, col].set_title(f"Theta Estimation Change for Trait {i+1} (noise={self.select_noise})")
+                axs2[row, col].set_xlabel("Step")
+                axs2[row, col].set_ylabel("Theta Value")
+                axs2[row, col].legend()
+                axs2[row, col].grid(True)
+            
+
+            
+
+            if self.n_traits % 2 != 0:
+                fig2.delaxes(axs2[-1, -1])
+            fig2.tight_layout()
+            if not no_show:
+                plt.show()
+            plt.close(fig2)
+
+
+        if save_fig:
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+
+            fig1.savefig(os.path.join(save_dir, 
+                                      f"MIRT_info_{self.select_noise:.2f}.png"))
+            fig2.savefig(os.path.join(save_dir, 
+                                      f"MIRT_theta_{self.select_noise:.2f}.png"))
+        
