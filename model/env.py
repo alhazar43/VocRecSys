@@ -46,8 +46,7 @@ class VocRecEnv:
     def _generate_user_feedback(self, job_rank):
         feedback = []
         for i in range(self.n_jobs):
-            # Calculate mean difference between ability and each job in ranked_jobs
-            difficulty_gap = np.abs(self.ability - job_rank[i]).mean()
+            difficulty_gap = np.array(self.ability - job_rank[i]).mean()
             
             # Dynamic feedback based on difficulty gap
             if difficulty_gap > 1:

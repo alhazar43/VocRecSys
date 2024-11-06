@@ -6,15 +6,16 @@ from collections import Counter
 import os
 
 class AdaptiveMIRT:
-    def __init__(self, select_noise=0.1, n_items=1000, n_traits=6, n_steps=5, probs=None, verbose=False):
+    def __init__(self, select_noise=0.1, n_items=1000, n_traits=6, probs=None, verbose=False):
         if probs is None:
             probs = [0.4, 0.2, 0.2, 0.1, 0.1]
         self.verbose = verbose
         item_opts = ['likert', 'binary', 'value', 'mc_single', 'mc_multi']
         self.item_types = np.random.choice(item_opts, size=n_items, p=probs)
+        
         self.n_items = n_items
         self.n_traits = n_traits
-        self.n_steps = n_steps
+        
         self.true_th = np.random.uniform(-3, 3, size=n_traits)
         self.est_th = np.zeros(n_traits)
         self.th_hist = []
@@ -30,50 +31,35 @@ class AdaptiveMIRT:
         self.last_item = None
         self.select_noise = select_noise
 
-    def log_like(self, th, item=None):
-        if item is not None:
-            return self._item_log_like(th, item)
-        else:
-            ll = 0
-            for i, q in enumerate(self.sel_items):
-                ll += self._item_log_like(th, q, self.responses[i])
-            return -ll
+    def log_like(self, theta, item=None):
+        ll = np.sum([self._item_log_like(theta, q, resp) for q, resp in zip(self.sel_items, self.responses)])
+        return -ll
 
-    def _item_log_like(self, th, item, resp=None):
+    def _item_log_like(self, theta, item, resp=None):
         it_type = self.item_types[item]
         if it_type == "binary":
-            prob = self.bin_prob(self.a_params[item], self.bin_b[item], th)
-            if resp is None:
-                return prob * (1 - prob)
-            else:
-                prob = np.clip(prob, 1e-8, 1 - 1e-8)
-                return resp * np.log(prob) + (1 - resp) * np.log(1 - prob)
+            prob = self.bin_prob(self.a_params[item], self.bin_b[item], theta)
+            prob = np.clip(prob, 1e-8, 1 - 1e-8)  # Avoid log(0) issues
+            return resp * np.log(prob) + (1 - resp) * np.log(1 - prob) if resp is not None else prob * (1 - prob)
         elif it_type == "likert":
-            probs = self.gpcm_prob(self.a_params[item], th, self.thresholds[item])
+            probs = self.scale_prob(self.a_params[item], theta, self.thresholds[item])
             return np.sum(probs * (1 - probs)) if resp is None else np.log(probs[resp - 1])
         elif it_type == "value":
-            probs = self.gpcm_prob(self.a_params[item], th, self.val_thresh)
+            probs = self.scale_prob(self.a_params[item], theta, self.val_thresh)
             return np.sum(probs * (1 - probs)) if resp is None else np.log(probs[resp])
         elif it_type == "mc_single":
-            probs = self.mc_single_prob(self.mc_params[item], th)
+            probs = self.mc_single_prob(self.mc_params[item], theta)
             return np.sum(probs * (1 - probs)) if resp is None else np.log(probs[resp])
         elif it_type == "mc_multi":
-            probs = self.mc_multi_prob(self.mc_params[item], th)
+            probs = self.mc_multi_prob(self.mc_params[item], theta)
             return np.sum(probs * (1 - probs)) if resp is None else sum([resp[j] * np.log(probs[j]) + (1 - resp[j]) * np.log(1 - probs[j]) for j in range(len(resp))])
 
     def next_item(self):
-        infos = []
-        for i in range(self.n_items):
-            if i in self.sel_items:
-                infos.append(-np.inf)
-                continue
-            info = self.log_like(self.est_th, item=i)
-            infos.append(info + np.random.randn() * self.select_noise)
+        # Optimized selection with noise addition
+        infos = np.array([self.log_like(self.est_th) + np.random.randn() * self.select_noise for _ in range(self.n_items)])
         next_item = np.argmax(infos)
-        self.sel_items.append(next_item)
+        self.sel_items.append(next_item)  # Append to list
         self.last_item = next_item
-        if self.verbose:
-            print(f"Selected Item {next_item+1}")
         return next_item
 
     def sim_resp(self):
@@ -85,10 +71,10 @@ class AdaptiveMIRT:
             prob = self.bin_prob(self.a_params[q], self.bin_b[q], self.true_th)
             resp = np.random.binomial(1, prob)
         elif it_type == "likert":
-            probs = self.gpcm_prob(self.a_params[q], self.true_th, self.thresholds[q])
+            probs = self.scale_prob(self.a_params[q], self.true_th, self.thresholds[q])
             resp = np.argmax(np.random.multinomial(1, probs)) + 1
         elif it_type == "value":
-            probs = self.gpcm_prob(self.a_params[q], self.true_th, self.val_thresh)
+            probs = self.scale_prob(self.a_params[q], self.true_th, self.val_thresh)
             resp = np.argmax(np.random.multinomial(1, probs))
         elif it_type == "mc_single":
             probs = self.mc_single_prob(self.mc_params[q], self.true_th)
@@ -98,24 +84,28 @@ class AdaptiveMIRT:
             resp = np.random.binomial(1, probs)
         self.responses.append(resp)
         self.info_gain.append(self.log_like(self.est_th, item=q))
+        
         if self.verbose:
             print(f"Simulated Response: {resp}, Info Gain: {self.info_gain[-1]}")
         return resp
 
-    def bin_prob(self, a, b, th):
-        return expit(np.dot(a, th) - b)
+    def bin_prob(self, a, b, theta):
+        # 2PL for binary response
+        return expit(a.dot(theta) - b)
 
-    def gpcm_prob(self, a, th, thresholds):
-        diff = np.dot(a, th)
+    def scale_prob(self, a, theta, thresholds):
+        # GPCM for likert scale and value based response
+        diff = a.dot(theta)
         probs = [1] + [np.exp(diff - thresholds[k]) for k in range(len(thresholds))]
         return np.array(probs) / np.sum(probs)
 
-    def mc_single_prob(self, a, th):
-        expnt = np.dot(a.T, th)
+    def mc_single_prob(self, a, theta):
+        
+        expnt = a.T.np.dot(theta)
         return np.exp(expnt) / np.sum(np.exp(expnt))
 
-    def mc_multi_prob(self, a, th):
-        probs = expit(np.dot(a.T, th))
+    def mc_multi_prob(self, a, theta):
+        probs = expit(a.T.dot(theta))
         return np.clip(probs, 0, 1)
 
     def update_theta(self):
