@@ -17,7 +17,7 @@ buffer = ReplayBuffer()
 # buffer = ReplayBuffer(capacity=10000, state_dim=6, action_dim=20, device=agent.device)
 
 # Training settings
-num_episodes = 50
+num_episodes = 200
 batch_size = 64
 
 # Lists to store metrics for plotting

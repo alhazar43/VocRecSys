@@ -40,5 +40,5 @@ Same
 ![loss](figure/actor_critic_losses_nov7.png)
 ![reward](figure/cumulative_rewards_nov7.png)
 ### Nov 11
-![loss](figure/actor_critic_losses.png)
-![reward](figure/cumulative_rewards.png)
+![loss](figure/actor_critic_losses_nov11.png)
+![reward](figure/cumulative_rewards_nov11.png)
