@@ -16,6 +16,10 @@ Nov 7 **-115.84%**
 
 Training Episodes: 50/50 [24:12<00:00, **29.04s/it**]
 
+Nov 11 **-45.05%**
+
+Training Episodes: 50/50 [16:41<00:00, **20.03s/it**]
+
 
 
 ## 2. GPU usage
@@ -25,6 +29,9 @@ Only 3% gpu used.
 Nov 7
 Max 15% usage, seems ok
 
+Nov 11
+Same
+
 ## 3. Training results
 ### Oct 29
 ![loss](figure/actor_critic_losses_oct29.png)
@@ -32,3 +39,6 @@ Max 15% usage, seems ok
 ### Nov 7
 ![loss](figure/actor_critic_losses_nov7.png)
 ![reward](figure/cumulative_rewards_nov7.png)
+### Nov 11
+![loss](figure/actor_critic_losses.png)
+![reward](figure/cumulative_rewards.png)

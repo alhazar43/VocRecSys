@@ -1,11 +1,5 @@
 # MDP definition
 
-## 1. Action def
-- [x] Ranking
-- [x] Probability
-- [ ] Hierarchical
-
-## 2. Reward def
 Tested definition:
 
 - **State space**: $\mathcal{S} = [0,1] \text{ where } s_t = \alpha_t$ is latent ability estimation
@@ -24,7 +18,7 @@ Tested definition:
 
 - **Policy** $\pi_{\theta}(s_t) = \{r_c\}_{c \in \mathcal{C}}$
 
-## 3. DL defs
+# DL defs
 - **MSE Loss** $\mathcal{L}_{\text{MSE}}(\theta) = \mathbb{E}_{s_t \sim \mathcal{D}} \left[\frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} (r_c - (1-|\alpha_t - d_c|))^2\right]$
 - **Contrastive Loss** $\mathcal{L}_{\text{cont}}(\theta) = \mathbb{E}_{s_t \sim \mathcal{D}} \left[-\log \frac{e^{r_c/\tau}}{e^{r_c/\tau} + \sum_{c' \in \mathcal{N}(c)} e^{r_{c'}/\tau}}\right]$
 - **Combined Loss** $\mathcal{L}_{\text{total}}(\theta) = \lambda_1 \mathcal{L}_{\text{MSE}} + \lambda_2 \mathcal{L}_{\text{rank}} + \lambda_3 \mathcal{L}_{\text{cont}}$
