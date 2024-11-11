@@ -14,10 +14,11 @@ if not os.path.exists("figure"):
 env = VocRecEnv()
 agent = PPOAgent(env)
 buffer = ReplayBuffer()
+# buffer = ReplayBuffer(capacity=10000, state_dim=6, action_dim=20, device=agent.device)
 
 # Training settings
 num_episodes = 50
-batch_size = 32
+batch_size = 64
 
 # Lists to store metrics for plotting
 actor_losses = []
@@ -45,6 +46,7 @@ for episode in tqdm(range(num_episodes), desc="Training Episodes"):
             actor_losses.append(agent.actor_loss_value)  # Replace with actual actor loss attribute
             critic_losses.append(agent.critic_loss_value)  # Replace with actual critic loss attribute
             buffer.clear()
+
 
         if done:
             break

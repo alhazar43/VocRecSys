@@ -8,12 +8,27 @@ agent.py:105: UserWarning: Creating a tensor from a list of numpy.ndarrays is ex
 states = torch.FloatTensor([entry[0] for entry in batch])
 ```
 
+Oct 29
 
-  Training Episodes: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 50/50 [52:14<00:00, 62.69s/it]
+Training Episodes: 50/50 [52:14<00:00, **62.69s/it**]
+
+Nov 7 **-115.84%** 
+
+Training Episodes: 50/50 [24:12<00:00, **29.04s/it**]
+
+
 
 ## 2. GPU usage
+Oct 29
 Only 3% gpu used.
 
+Nov 7
+Max 15% usage, seems ok
+
 ## 3. Training results
-![loss](figure/actor_critic_losses.png)
-![reward](figure/cumulative_rewards.png)
+### Oct 29
+![loss](figure/actor_critic_losses_oct29.png)
+![reward](figure/cumulative_rewards_oct29.png)
+### Nov 7
+![loss](figure/actor_critic_losses_nov7.png)
+![reward](figure/cumulative_rewards_nov7.png)
