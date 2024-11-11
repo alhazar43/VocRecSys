@@ -1,6 +1,5 @@
 import numpy as np
 from IRT import AdaptiveMIRT
-from NewIRT import AdaptiveMIRTNew
 
 class VocRecEnv:
     def __init__(self, n_items=1000, n_traits=6, n_jobs=20, n_adaptive=5, ability_range=[-3, 3]):
@@ -10,7 +9,7 @@ class VocRecEnv:
         self.n_adaptive = n_adaptive
         self.ability_range = ability_range  
         self.job_req = np.random.uniform(*ability_range, size=n_jobs)
-        self.test =  AdaptiveMIRTNew()
+        self.test =  AdaptiveMIRT()
 
     def reset(self):
         

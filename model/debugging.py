@@ -6,9 +6,7 @@ from collections import Counter
 import os
 from numba import jit
 
-
-
-class AdaptiveMIRTvD:
+class OptimizedAdaptiveMIRT:
     def __init__(self, select_noise=0.1, n_items=1000, n_traits=6, n_steps=5, probs=None, verbose=False):
         if probs is None:
             probs = [0.4, 0.2, 0.2, 0.1, 0.1]
@@ -24,14 +22,13 @@ class AdaptiveMIRTvD:
         self.est_th = np.zeros(n_traits)
         self.th_hist = []
         
-        # Pre-compute parameters as numpy arrays
+        # Pre-compute parameters as numpy arrays with original initialization
         self.a_params = np.random.randn(n_items, n_traits)
         self.thresholds = np.sort(np.random.uniform(-2, 2, size=(n_items, 4)), axis=1)
         self.bin_b = np.random.randn(n_items)
         self.val_thresh = np.sort(np.random.uniform(-2, 2, size=5))
         self.mc_params = np.random.randn(n_items, n_traits, 4)
         
-        # Initialize tracking arrays
         self.sel_items = []
         self.responses = []
         self.info_gain = []
@@ -41,8 +38,16 @@ class AdaptiveMIRTvD:
 
     @staticmethod
     @jit(nopython=True)
-    def bin_prob(a, b, th):
+    def binary_prob(a, b, th):
+        """Standard binary probability"""
         return 1 / (1 + np.exp(-(np.dot(a, th) - b)))
+
+    @staticmethod
+    @jit(nopython=True)
+    def mc_binary_prob(a, th):
+        """MC multi binary probability"""
+        logits = np.dot(a.T, th)
+        return 1 / (1 + np.exp(-logits))
 
     @staticmethod
     @jit(nopython=True)
@@ -56,22 +61,15 @@ class AdaptiveMIRTvD:
     @jit(nopython=True)
     def mc_single_prob(a, th):
         expnt = np.dot(a.T, th)
-        max_expnt = np.max(expnt)  # For numerical stability
+        max_expnt = np.max(expnt)
         exp_expnt = np.exp(expnt - max_expnt)
         return exp_expnt / np.sum(exp_expnt)
-
-    @staticmethod
-    @jit(nopython=True)
-    def mc_multi_prob(a, th):
-        logits = np.dot(a.T, th)
-        probs = 1 / (1 + np.exp(-logits))
-        return np.clip(probs, 0, 1)
 
     def _item_log_like(self, th, item, resp=None):
         it_type = self.item_types[item]
         
         if it_type == "binary":
-            prob = self.bin_prob(self.a_params[item], self.bin_b[item], th)
+            prob = self.binary_prob(self.a_params[item], self.bin_b[item], th)
             if resp is None:
                 return prob * (1 - prob)
             prob = np.clip(prob, 1e-8, 1 - 1e-8)
@@ -96,7 +94,8 @@ class AdaptiveMIRTvD:
             return np.log(probs[resp])
             
         else:  # mc_multi
-            probs = self.mc_multi_prob(self.mc_params[item], th)
+            probs = self.mc_binary_prob(self.mc_params[item], th)
+            probs = np.clip(probs, 1e-8, 1 - 1e-8)
             if resp is None:
                 return np.sum(probs * (1 - probs))
             return np.sum([resp[j] * np.log(probs[j]) + (1 - resp[j]) * np.log(1 - probs[j]) 
@@ -112,11 +111,11 @@ class AdaptiveMIRTvD:
         return -ll
 
     def next_item(self):
-        # Pre-allocate infos array
+        # Use numpy vectorization for remaining items calculation
+        remaining = np.setdiff1d(np.arange(self.n_items), self.sel_items)
         infos = np.full(self.n_items, -np.inf)
         
-        # Only compute for non-selected items
-        remaining = np.setdiff1d(np.arange(self.n_items), self.sel_items)
+        # Compute information for all remaining items at once
         infos[remaining] = [self.log_like(self.est_th, item=i) for i in remaining]
         
         if self.select_noise > 0:
@@ -138,7 +137,7 @@ class AdaptiveMIRTvD:
         it_type = self.item_types[q]
         
         if it_type == "binary":
-            prob = self.bin_prob(self.a_params[q], self.bin_b[q], self.true_th)
+            prob = self.binary_prob(self.a_params[q], self.bin_b[q], self.true_th)
             resp = np.random.binomial(1, prob)
             
         elif it_type == "likert":
@@ -154,7 +153,7 @@ class AdaptiveMIRTvD:
             resp = np.argmax(np.random.multinomial(1, probs))
             
         else:  # mc_multi
-            probs = self.mc_multi_prob(self.mc_params[q], self.true_th)
+            probs = self.mc_binary_prob(self.mc_params[q], self.true_th)
             resp = np.random.binomial(1, probs)
         
         self.responses.append(resp)
@@ -172,14 +171,11 @@ class AdaptiveMIRTvD:
         if self.verbose:
             print(f"Updated Theta: {self.est_th}")
 
-    # [Previous plotting code remains the same]
-    
     def _get_theta(self):
         if len(self.est_th):
             return self.est_th
         else:
             return self.true_th
-        
 
     def plot_results(self, plot_info=True, plot_theta=True, no_show=False, save_fig=True, save_dir="figure"):
         if plot_info:
@@ -211,9 +207,8 @@ class AdaptiveMIRTvD:
                 plt.show()
             plt.close(fig1)
 
-        
         if plot_theta:
-            n_rows = (self.n_traits + 1) // 2  # Number of rows needed for 3x2 layout
+            n_rows = (self.n_traits + 1) // 2
             fig2, axs2 = plt.subplots(n_rows, 2, figsize=(15, 5 * n_rows))
             th_hist = np.array(self.th_hist)
             for i in range(self.n_traits):
@@ -225,9 +220,6 @@ class AdaptiveMIRTvD:
                 axs2[row, col].set_ylabel("Theta Value")
                 axs2[row, col].legend()
                 axs2[row, col].grid(True)
-            
-
-            
 
             if self.n_traits % 2 != 0:
                 fig2.delaxes(axs2[-1, -1])
@@ -236,13 +228,8 @@ class AdaptiveMIRTvD:
                 plt.show()
             plt.close(fig2)
 
-
         if save_fig:
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
-
-            fig1.savefig(os.path.join(save_dir, 
-                                      f"MIRT_info_{self.select_noise:.2f}.png"))
-            fig2.savefig(os.path.join(save_dir, 
-                                      f"MIRT_theta_{self.select_noise:.2f}.png"))
-            
+            fig1.savefig(os.path.join(save_dir, f"MIRT_info_{self.select_noise:.2f}.png"))
+            fig2.savefig(os.path.join(save_dir, f"MIRT_theta_{self.select_noise:.2f}.png"))

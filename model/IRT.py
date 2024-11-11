@@ -4,6 +4,7 @@ from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 from collections import Counter
 import os
+from numba import jit
 
 class AdaptiveMIRT:
     def __init__(self, select_noise=0.1, n_items=1000, n_traits=6, n_steps=5, probs=None, verbose=False):
@@ -12,17 +13,22 @@ class AdaptiveMIRT:
         self.verbose = verbose
         item_opts = ['likert', 'binary', 'value', 'mc_single', 'mc_multi']
         self.item_types = np.random.choice(item_opts, size=n_items, p=probs)
+        
         self.n_items = n_items
         self.n_traits = n_traits
         self.n_steps = n_steps
+        
         self.true_th = np.random.uniform(-3, 3, size=n_traits)
         self.est_th = np.zeros(n_traits)
         self.th_hist = []
+        
+        # Pre-compute parameters as numpy arrays
         self.a_params = np.random.randn(n_items, n_traits)
-        self.thresholds = [np.sort(np.random.uniform(-2, 2, size=4)) for _ in range(n_items)]
+        self.thresholds = np.sort(np.random.uniform(-2, 2, size=(n_items, 4)), axis=1)
         self.bin_b = np.random.randn(n_items)
         self.val_thresh = np.sort(np.random.uniform(-2, 2, size=5))
         self.mc_params = np.random.randn(n_items, n_traits, 4)
+        
         self.sel_items = []
         self.responses = []
         self.info_gain = []
@@ -30,48 +36,92 @@ class AdaptiveMIRT:
         self.last_item = None
         self.select_noise = select_noise
 
-    def log_like(self, th, item=None):
-        if item is not None:
-            return self._item_log_like(th, item)
-        else:
-            ll = 0
-            for i, q in enumerate(self.sel_items):
-                ll += self._item_log_like(th, q, self.responses[i])
-            return -ll
+    @staticmethod
+    @jit(nopython=True)
+    def binary_prob(a, b, th):
+        """Standard binary probability"""
+        return 1 / (1 + np.exp(-(np.dot(a, th) - b)))
+
+    @staticmethod
+    @jit(nopython=True)
+    def mc_binary_prob(a, th):
+        """MC multi binary probability"""
+        logits = np.dot(a.T, th)
+        return 1 / (1 + np.exp(-logits))
+
+    @staticmethod
+    @jit(nopython=True)
+    def gpcm_prob(a, th, thresholds):
+        diff = np.dot(a, th)
+        probs = np.ones(len(thresholds) + 1)
+        probs[1:] = np.exp(diff - thresholds)
+        return probs / np.sum(probs)
+
+    @staticmethod
+    @jit(nopython=True)
+    def mc_single_prob(a, th):
+        expnt = np.dot(a.T, th)
+        max_expnt = np.max(expnt)
+        exp_expnt = np.exp(expnt - max_expnt)
+        return exp_expnt / np.sum(exp_expnt)
 
     def _item_log_like(self, th, item, resp=None):
         it_type = self.item_types[item]
+        
         if it_type == "binary":
-            prob = self.bin_prob(self.a_params[item], self.bin_b[item], th)
+            prob = self.binary_prob(self.a_params[item], self.bin_b[item], th)
             if resp is None:
                 return prob * (1 - prob)
-            else:
-                prob = np.clip(prob, 1e-8, 1 - 1e-8)
-                return resp * np.log(prob) + (1 - resp) * np.log(1 - prob)
+            prob = np.clip(prob, 1e-8, 1 - 1e-8)
+            return resp * np.log(prob) + (1 - resp) * np.log(1 - prob)
+            
         elif it_type == "likert":
             probs = self.gpcm_prob(self.a_params[item], th, self.thresholds[item])
-            return np.sum(probs * (1 - probs)) if resp is None else np.log(probs[resp - 1])
+            if resp is None:
+                return np.sum(probs * (1 - probs))
+            return np.log(probs[resp - 1])
+            
         elif it_type == "value":
             probs = self.gpcm_prob(self.a_params[item], th, self.val_thresh)
-            return np.sum(probs * (1 - probs)) if resp is None else np.log(probs[resp])
+            if resp is None:
+                return np.sum(probs * (1 - probs))
+            return np.log(probs[resp])
+            
         elif it_type == "mc_single":
             probs = self.mc_single_prob(self.mc_params[item], th)
-            return np.sum(probs * (1 - probs)) if resp is None else np.log(probs[resp])
-        elif it_type == "mc_multi":
-            probs = self.mc_multi_prob(self.mc_params[item], th)
-            return np.sum(probs * (1 - probs)) if resp is None else sum([resp[j] * np.log(probs[j]) + (1 - resp[j]) * np.log(1 - probs[j]) for j in range(len(resp))])
+            if resp is None:
+                return np.sum(probs * (1 - probs))
+            return np.log(probs[resp])
+            
+        else:  # mc_multi
+            probs = self.mc_binary_prob(self.mc_params[item], th)  # Using separate function for mc_multi
+            probs = np.clip(probs, 1e-8, 1 - 1e-8)
+            if resp is None:
+                return np.sum(probs * (1 - probs))
+            return np.sum([resp[j] * np.log(probs[j]) + (1 - resp[j]) * np.log(1 - probs[j]) 
+                         for j in range(len(resp))])
+
+    def log_like(self, th, item=None):
+        if item is not None:
+            return self._item_log_like(th, item)
+        
+        ll = 0
+        for i, q in enumerate(self.sel_items):
+            ll += self._item_log_like(th, q, self.responses[i])
+        return -ll
 
     def next_item(self):
-        infos = []
-        for i in range(self.n_items):
-            if i in self.sel_items:
-                infos.append(-np.inf)
-                continue
-            info = self.log_like(self.est_th, item=i)
-            infos.append(info + np.random.randn() * self.select_noise)
+        infos = np.full(self.n_items, -np.inf)
+        remaining = np.setdiff1d(np.arange(self.n_items), self.sel_items)
+        infos[remaining] = [self.log_like(self.est_th, item=i) for i in remaining]
+        
+        if self.select_noise > 0:
+            infos[remaining] += np.random.randn(len(remaining)) * self.select_noise
+            
         next_item = np.argmax(infos)
         self.sel_items.append(next_item)
         self.last_item = next_item
+        
         if self.verbose:
             print(f"Selected Item {next_item+1}")
         return next_item
@@ -79,58 +129,50 @@ class AdaptiveMIRT:
     def sim_resp(self):
         if self.last_item is None:
             raise ValueError("No item selected.")
+            
         q = self.last_item
         it_type = self.item_types[q]
+        
         if it_type == "binary":
-            prob = self.bin_prob(self.a_params[q], self.bin_b[q], self.true_th)
+            prob = self.binary_prob(self.a_params[q], self.bin_b[q], self.true_th)
             resp = np.random.binomial(1, prob)
+            
         elif it_type == "likert":
             probs = self.gpcm_prob(self.a_params[q], self.true_th, self.thresholds[q])
             resp = np.argmax(np.random.multinomial(1, probs)) + 1
+            
         elif it_type == "value":
             probs = self.gpcm_prob(self.a_params[q], self.true_th, self.val_thresh)
             resp = np.argmax(np.random.multinomial(1, probs))
+            
         elif it_type == "mc_single":
             probs = self.mc_single_prob(self.mc_params[q], self.true_th)
             resp = np.argmax(np.random.multinomial(1, probs))
-        elif it_type == "mc_multi":
-            probs = self.mc_multi_prob(self.mc_params[q], self.true_th)
+            
+        else:  # mc_multi
+            probs = self.mc_binary_prob(self.mc_params[q], self.true_th)
             resp = np.random.binomial(1, probs)
+        
         self.responses.append(resp)
         self.info_gain.append(self.log_like(self.est_th, item=q))
+        
         if self.verbose:
             print(f"Simulated Response: {resp}, Info Gain: {self.info_gain[-1]}")
         return resp
-
-    def bin_prob(self, a, b, th):
-        return expit(np.dot(a, th) - b)
-
-    def gpcm_prob(self, a, th, thresholds):
-        diff = np.dot(a, th)
-        probs = [1] + [np.exp(diff - thresholds[k]) for k in range(len(thresholds))]
-        return np.array(probs) / np.sum(probs)
-
-    def mc_single_prob(self, a, th):
-        expnt = np.dot(a.T, th)
-        return np.exp(expnt) / np.sum(np.exp(expnt))
-
-    def mc_multi_prob(self, a, th):
-        probs = expit(np.dot(a.T, th))
-        return np.clip(probs, 0, 1)
 
     def update_theta(self):
         res = minimize(self.log_like, self.est_th, method='L-BFGS-B', bounds=self.bounds)
         self.est_th = res.x[:self.n_traits]
         self.th_hist.append(self.est_th.copy())
+        
         if self.verbose:
             print(f"Updated Theta: {self.est_th}")
-    
+
     def _get_theta(self):
         if len(self.est_th):
             return self.est_th
         else:
             return self.true_th
-        
 
     def plot_results(self, plot_info=True, plot_theta=True, no_show=False, save_fig=True, save_dir="figure"):
         if plot_info:
@@ -162,9 +204,8 @@ class AdaptiveMIRT:
                 plt.show()
             plt.close(fig1)
 
-        
         if plot_theta:
-            n_rows = (self.n_traits + 1) // 2  # Number of rows needed for 3x2 layout
+            n_rows = (self.n_traits + 1) // 2
             fig2, axs2 = plt.subplots(n_rows, 2, figsize=(15, 5 * n_rows))
             th_hist = np.array(self.th_hist)
             for i in range(self.n_traits):
@@ -176,9 +217,6 @@ class AdaptiveMIRT:
                 axs2[row, col].set_ylabel("Theta Value")
                 axs2[row, col].legend()
                 axs2[row, col].grid(True)
-            
-
-            
 
             if self.n_traits % 2 != 0:
                 fig2.delaxes(axs2[-1, -1])
@@ -187,13 +225,8 @@ class AdaptiveMIRT:
                 plt.show()
             plt.close(fig2)
 
-
         if save_fig:
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
-
-            fig1.savefig(os.path.join(save_dir, 
-                                      f"MIRT_info_{self.select_noise:.2f}.png"))
-            fig2.savefig(os.path.join(save_dir, 
-                                      f"MIRT_theta_{self.select_noise:.2f}.png"))
-        
+            fig1.savefig(os.path.join(save_dir, f"MIRT_info_{self.select_noise:.2f}.png"))
+            fig2.savefig(os.path.join(save_dir, f"MIRT_theta_{self.select_noise:.2f}.png"))
