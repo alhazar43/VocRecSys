@@ -7,7 +7,7 @@ import os
 from numba import jit
 
 class AdaptiveMIRT:
-    def __init__(self, select_noise=0.1, n_items=1000, n_traits=6, n_steps=5, probs=None, verbose=False):
+    def __init__(self, select_noise=0.05, n_items=1000, n_traits=6, probs=None, verbose=False):
         if probs is None:
             probs = [0.4, 0.2, 0.2, 0.1, 0.1]
         self.verbose = verbose
@@ -16,7 +16,6 @@ class AdaptiveMIRT:
         
         self.n_items = n_items
         self.n_traits = n_traits
-        self.n_steps = n_steps
         
         self.true_th = np.random.uniform(-3, 3, size=n_traits)
         self.est_th = np.zeros(n_traits)
