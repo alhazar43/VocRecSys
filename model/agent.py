@@ -3,58 +3,12 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy as np
 from typing import Dict, Tuple
-from utils import ReplayBuffer
-from networks import Actor, Critic
+from utils import ReplayBuffer, PPOMemory
+from networks import Actor, Critic, ActorCritic
+import torch.nn.functional as F
+import os
 
-# class Actor(nn.Module):
-#     """Policy network that directly outputs job scores"""
-#     def __init__(self, n_traits: int, n_jobs: int, hidden_dim: int = 256):
-#         super().__init__()
-#         self.network = nn.Sequential(
-#             nn.Linear(n_traits, hidden_dim),
-#             nn.LayerNorm(hidden_dim),
-#             nn.ReLU(),
-#             nn.Linear(hidden_dim, hidden_dim),
-#             nn.LayerNorm(hidden_dim),
-#             nn.ReLU(),
-#             nn.Linear(hidden_dim, n_jobs),
-#             nn.Softplus()  # Ensure positive scores
-#         )
-        
-#         # Initialize weights
-#         for m in self.modules():
-#             if isinstance(m, nn.Linear):
-#                 nn.init.orthogonal_(m.weight, gain=0.1)
-#                 if m.bias is not None:
-#                     nn.init.zeros_(m.bias)
-    
-#     def forward(self, state: torch.Tensor) -> torch.Tensor:
-#         """Directly output job scores"""
-#         return self.network(state)
 
-# class Critic(nn.Module):
-#     """Value network"""
-#     def __init__(self, n_traits: int, hidden_dim: int = 256):
-#         super().__init__()
-#         self.network = nn.Sequential(
-#             nn.Linear(n_traits, hidden_dim),
-#             nn.LayerNorm(hidden_dim),
-#             nn.ReLU(),
-#             nn.Linear(hidden_dim, hidden_dim),
-#             nn.LayerNorm(hidden_dim),
-#             nn.ReLU(),
-#             nn.Linear(hidden_dim, 1)
-#         )
-        
-#         # Initialize weights
-#         for m in self.modules():
-#             if isinstance(m, nn.Linear):
-#                 nn.init.orthogonal_(m.weight, gain=0.1)
-#                 if m.bias is not None:
-#                     nn.init.zeros_(m.bias)
-    
-#     def forward(self, state: torch.Tensor) -> torch.Tensor:
-#         return self.network(state)
 
 class PPOAgent:
     def __init__(
@@ -67,106 +21,200 @@ class PPOAgent:
         epsilon: float = 0.2,
         c1: float = 0.5,
         c2: float = 0.01,
-        buffer_size: int = 10000,
         batch_size: int = 64,
+        n_epochs: int = 4,
         noise_std: float = 0.1
     ):
-        self.n_traits = n_traits
-        self.n_jobs = n_jobs
+        self.hidden_dim = hidden_dim
+        self.lr = lr
         self.gamma = gamma
         self.epsilon = epsilon
         self.c1 = c1
+        self.c2 = c2
         self.batch_size = batch_size
+        self.n_epochs = n_epochs
         self.noise_std = noise_std
+
+
+        self.actor_critic = ActorCritic(n_traits, n_jobs, self.hidden_dim)
+        self.optimizer = optim.Adam(self.actor_critic.parameters(), lr=self.lr)
+        self.memory = PPOMemory(self.batch_size)
         
-        self.actor = Actor(n_traits, n_jobs, hidden_dim)
-        self.critic = Critic(n_traits, hidden_dim)
-        
-        self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=lr)
-        self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=lr)
-        
-        self.replay_buffer = ReplayBuffer(buffer_size)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.to(self.device)
+        self.actor_critic.to(self.device)
     
-    def to(self, device: torch.device):
-        """Move networks to device"""
-        self.actor = self.actor.to(device)
-        self.critic = self.critic.to(device)
-        
-    def select_action(self, state: np.ndarray) -> Tuple[np.ndarray, torch.Tensor]:
-        """Select action with exploration noise"""
+    def set_env(self, env):
+        """Set environment reference in actor-critic"""
+        self.actor_critic.set_env(env)
+    
+    def select_action(self, state: np.ndarray) -> Tuple[np.ndarray, torch.Tensor, torch.Tensor]:
+        """Select action and return action probabilities and value"""
         state_tensor = torch.FloatTensor(state).to(self.device)
+    
         with torch.no_grad():
-            scores = self.actor(state_tensor)
-            # Add exploration noise
-            noise = torch.randn_like(scores) * self.noise_std
-            scores = scores + noise
-            scores = torch.clamp(scores, 0, 1)  # Keep in valid range
-        return scores.cpu().numpy(), torch.zeros(1)  # dummy log_prob for compatibility
+            job_scores, action_probs, value = self.actor_critic(state_tensor)
+            
+            # Add exploration noise to scores
+            if self.noise_std > 0:
+                noise = torch.randn_like(job_scores) * self.noise_std
+                job_scores = job_scores + noise
+                # Recompute probabilities with noise
+                action_probs = F.softmax(job_scores, dim=-1)
+            
+        return job_scores.squeeze(0).cpu().numpy(), action_probs, value
     
     def update(self) -> Tuple[float, float, float]:
-        if len(self.replay_buffer) < self.batch_size:
-            return 0.0, 0.0, 0.0
+        # Compute GAE first
+        states = torch.FloatTensor(np.array(self.memory.states)).to(self.device)
+        rewards = torch.FloatTensor(np.array(self.memory.rewards)).to(self.device)
+        values = torch.FloatTensor(np.array(self.memory.vals)).to(self.device)
         
-        states, actions, rewards, next_states = self.replay_buffer.sample(self.batch_size)
-        
-        # Move to device
-        states = states.to(self.device)
-        actions = actions.to(self.device)
-        rewards = rewards.to(self.device)
-        next_states = next_states.to(self.device)
-        
-        # Get current scores
-        current_scores = self.actor(states)
-        
-        # Compute advantages
         with torch.no_grad():
-            values = self.critic(states).squeeze()
-            next_values = self.critic(next_states).squeeze()
-            advantages = rewards + self.gamma * next_values - values
+            _, _, last_value = self.actor_critic(states[-1])
+            advantages = []
+            returns = []
+            gae = 0
+            
+            for r, v in zip(reversed(rewards), reversed(values)):
+                delta = r + self.gamma * last_value - v
+                gae = delta + self.gamma * 0.95 * gae  # 0.95 is GAE lambda
+                last_value = v
+                advantages.insert(0, gae)
+                returns.insert(0, gae + v)
+                
+            advantages = torch.tensor(advantages).to(self.device)
+            returns = torch.tensor(returns).to(self.device)
+            
+            # Normalize advantages
             advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
-        
-        # Compute score ratio
-        score_ratio = current_scores / (actions + 1e-8)
-        
-        # PPO losses
-        surr1 = score_ratio * advantages.unsqueeze(1)
-        surr2 = torch.clamp(score_ratio, 1-self.epsilon, 1+self.epsilon) * advantages.unsqueeze(1)
-        actor_loss = -torch.min(surr1, surr2).mean()
-        
-        # Value loss
-        value_preds = self.critic(states).squeeze()
-        value_targets = rewards + self.gamma * self.critic(next_states).squeeze().detach()
-        critic_loss = self.c1 * nn.MSELoss()(value_preds, value_targets)
-        
-        # Update actor
-        self.actor_optimizer.zero_grad()
-        actor_loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.actor.parameters(), max_norm=0.5)
-        self.actor_optimizer.step()
-        
-        # Update critic
-        self.critic_optimizer.zero_grad()
-        critic_loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.critic.parameters(), max_norm=0.5)
-        self.critic_optimizer.step()
-        
-        return actor_loss.item(), critic_loss.item(), 0.0
 
-    def save(self, path: str):
-        """Save model state"""
-        torch.save({
-            'actor_state_dict': self.actor.state_dict(),
-            'critic_state_dict': self.critic.state_dict(),
-            'actor_optimizer_state_dict': self.actor_optimizer.state_dict(),
-            'critic_optimizer_state_dict': self.critic_optimizer.state_dict()
-        }, path)
+        for _ in range(self.n_epochs):
+            for batch in self.memory.generate_batches():
+                states = torch.FloatTensor(np.array(self.memory.states))[batch].to(self.device)
+                old_probs = torch.FloatTensor(np.array(self.memory.probs))[batch].to(self.device)
+                old_scores = torch.FloatTensor(np.array(self.memory.actions))[batch].to(self.device)
+                rewards = torch.FloatTensor(np.array(self.memory.rewards))[batch].to(self.device)
+                next_states = torch.FloatTensor(np.array(self.memory.next_states))[batch].to(self.device)
+                values = torch.FloatTensor(np.array(self.memory.vals))[batch].to(self.device)
+
+                # Get current scores, probabilities and values
+                new_scores, new_probs, new_values = self.actor_critic(states)
+                # _,_, next_values = self.actor_critic(next_states)
+                
+                # Calculate advantages
+                advantages = rewards + self.gamma * new_values.squeeze() - values.squeeze()
+                advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+                
+                # Calculate probability ratio
+                prob_ratio = (new_probs / (old_probs + 1e-10))
+                
+                # Calculate surrogate losses
+                surr1 = prob_ratio * advantages.unsqueeze(1)
+                surr2 = torch.clamp(prob_ratio, 1-self.epsilon, 1+self.epsilon) * advantages.unsqueeze(1)
+                actor_loss = -torch.min(surr1, surr2).mean()
+                
+                # Calculate value loss
+                value_targets = rewards + self.gamma * new_values.squeeze().detach()
+                critic_loss = self.c1 * F.mse_loss(new_values.squeeze(), value_targets)
+                
+                # Calculate entropy bonus
+                score_reg = -self.c2 * torch.mean(new_scores)
+                total_loss = actor_loss + critic_loss + score_reg
+                
+                # Update network
+                self.optimizer.zero_grad()
+                total_loss.backward()
+                torch.nn.utils.clip_grad_norm_(self.actor_critic.parameters(), 0.85)
+                self.optimizer.step()
+        
+        self.memory.clear()
+        return actor_loss.item(), critic_loss.item(), score_reg.item()
+
+    # def save(self, path: str):
+    #     """Save model, optimizer state, and hyperparameters"""
+    #     checkpoint = {
+    #         # Model architecture parameters
+    #         'n_traits': self.n_traits,
+    #         'n_jobs': self.n_jobs,
+    #         'hidden_dim': self.hidden_dim,
+            
+    #         # Model state
+    #         'model_state_dict': self.actor_critic.state_dict(),
+    #         'optimizer_state_dict': self.optimizer.state_dict(),
+            
+    #         # Hyperparameters
+    #         'gamma': self.gamma,
+    #         'epsilon': self.epsilon,
+    #         'c1': self.c1,
+    #         'c2': self.c2,
+    #         'n_epochs': self.n_epochs,
+    #         'noise_std': self.noise_std,
+    #         'lr': self.lr
+    #     }
+        
+    #     # Create directory if it doesn't exist
+    #     os.makedirs(os.path.dirname(path), exist_ok=True)
+        
+    #     # Save the checkpoint
+    #     torch.save(checkpoint, path)
+    #     print(f"Model saved to {path}")
     
-    def load(self, path: str):
-        """Load model state"""
-        checkpoint = torch.load(path, map_location=self.device)
-        self.actor.load_state_dict(checkpoint['actor_state_dict'])
-        self.critic.load_state_dict(checkpoint['critic_state_dict'])
-        self.actor_optimizer.load_state_dict(checkpoint['actor_optimizer_state_dict'])
-        self.critic_optimizer.load_state_dict(checkpoint['critic_optimizer_state_dict'])
+    # def load(self, path: str):
+    #     """Load model, optimizer state, and hyperparameters"""
+    #     # Load checkpoint
+    #     checkpoint = torch.load(path, map_location=self.device)
+        
+    #     # Verify model architecture matches
+    #     if (checkpoint['n_traits'] != self.n_traits or 
+    #         checkpoint['n_jobs'] != self.n_jobs or 
+    #         checkpoint['hidden_dim'] != self.hidden_dim):
+            
+    #         # Recreate model with loaded architecture
+    #         self.n_traits = checkpoint['n_traits']
+    #         self.n_jobs = checkpoint['n_jobs']
+    #         self.hidden_dim = checkpoint['hidden_dim']
+    #         self.actor_critic = ActorCritic(self.n_traits, self.n_jobs, self.hidden_dim)
+    #         self.optimizer = optim.Adam(self.actor_critic.parameters(), lr=checkpoint['lr'])
+        
+    #     # Load model state
+    #     self.actor_critic.load_state_dict(checkpoint['model_state_dict'])
+    #     self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        
+    #     # Load hyperparameters
+    #     self.gamma = checkpoint['gamma']
+    #     self.epsilon = checkpoint['epsilon']
+    #     self.c1 = checkpoint['c1']
+    #     self.c2 = checkpoint['c2']
+    #     self.n_epochs = checkpoint['n_epochs']
+    #     self.noise_std = checkpoint['noise_std']
+    #     self.lr = checkpoint['lr']
+        
+    #     # Move model to correct device
+    #     self.actor_critic.to(self.device)
+    #     print(f"Model loaded from {path}")
+    
+    # @classmethod
+    # def load_from_checkpoint(cls, path: str):
+    #     """Create a new agent from a checkpoint file"""
+    #     # Load checkpoint
+    #     checkpoint = torch.load(path)
+        
+    #     # Create new agent with loaded parameters
+    #     agent = cls(
+    #         n_traits=checkpoint['n_traits'],
+    #         n_jobs=checkpoint['n_jobs'],
+    #         hidden_dim=checkpoint['hidden_dim'],
+    #         lr=checkpoint['lr'],
+    #         gamma=checkpoint['gamma'],
+    #         epsilon=checkpoint['epsilon'],
+    #         c1=checkpoint['c1'],
+    #         c2=checkpoint['c2'],
+    #         n_epochs=checkpoint['n_epochs'],
+    #         noise_std=checkpoint['noise_std']
+    #     )
+        
+    #     # Load state dictionaries
+    #     agent.actor_critic.load_state_dict(checkpoint['model_state_dict'])
+    #     agent.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        
+    #     return agent

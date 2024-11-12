@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
 from env import VocRecEnv
-from agent import PPOAgent
+from agent_new import PPOAgent
 
 class Trainer:
     def __init__(
@@ -196,11 +196,12 @@ if __name__ == "__main__":
     }
     
     agent_kwargs = {
-        'hidden_dim': 128,
-        'lr': 1e-3,
+        'hidden_dim': 64,
+        'lr': 3e-3,
         'gamma': 0.95,
         'epsilon': 0.1,
-        'c1': 1.0,  # Value loss coefficient
+        'c1': 0.75,  # Value loss coefficient
+        'c2': 0.01,
         'buffer_size': 10000,
         'batch_size': 128
     }
@@ -215,9 +216,9 @@ if __name__ == "__main__":
     
     # Start training
     trainer.train(
-        n_episodes=100,
+        n_episodes=300,
         steps_per_episode=300,
-        update_frequency=2
+        update_frequency=5
         ,
         log_frequency=10,
         save_frequency=100

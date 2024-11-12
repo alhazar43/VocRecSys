@@ -17,8 +17,8 @@ class AdaptiveMIRT:
         self.n_items = n_items
         self.n_traits = n_traits
         
-        self.true_th = np.random.uniform(-3, 3, size=n_traits)
-        self.est_th = np.zeros(n_traits)
+        self.true_th = np.random.uniform(-3, 3, size=self.n_traits)
+        self.est_th = np.zeros(self.n_traits)
         self.th_hist = []
         
         # Pre-compute parameters as numpy arrays
@@ -171,7 +171,7 @@ class AdaptiveMIRT:
         if len(self.est_th):
             return self.est_th
         else:
-            return self.true_th
+            return np.random.uniform(-3, 3, size=self.n_traits)
 
     def plot_results(self, plot_info=True, plot_theta=True, no_show=False, save_fig=True, save_dir="figure"):
         if plot_info:

@@ -38,3 +38,40 @@ class ReplayBuffer:
         n = min(n, len(self.buffer))
         recent_transitions = list(self.buffer)[-n:]
         return np.array([t[2] for t in recent_transitions])
+    
+
+class PPOMemory:
+    """Memory buffer for storing trajectories"""
+    def __init__(self, batch_size):
+        self.states = []
+        self.actions = []
+        self.probs = []    # Store old action probabilities
+        self.vals = []     # Store values
+        self.rewards = []
+        self.next_states = []
+        self.batch_size = batch_size
+
+    def store(self, state, action, prob, val, reward, next_state):
+        self.states.append(state)
+        self.actions.append(action)
+        self.probs.append(prob)
+        self.vals.append(val)
+        self.rewards.append(reward)
+        self.next_states.append(next_state)
+
+    def clear(self):
+        self.states = []
+        self.actions = []
+        self.probs = []
+        self.vals = []
+        self.rewards = []
+        self.next_states = []
+
+    def generate_batches(self):
+        n_states = len(self.states)
+        batch_start = np.arange(0, n_states, self.batch_size)
+        indices = np.arange(n_states, dtype=np.int64)
+        np.random.shuffle(indices)
+        batches = [indices[i:i+self.batch_size] for i in batch_start]
+        
+        return batches
