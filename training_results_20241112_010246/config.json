@@ -1,0 +1,28 @@
+{
+    "environment": {
+        "n_traits": 6,
+        "n_jobs": 100,
+        "top_k": 5,
+        "ability_range": [
+            -3,
+            3
+        ]
+    },
+    "agent": {
+        "n_traits": 6,
+        "n_jobs": 100,
+        "top_k": 5,
+        "hidden_dim": 128,
+        "lr": 0.0003,
+        "gamma": 0.99,
+        "gae_lambda": 0.95,
+        "clip_ratio": 0.2,
+        "target_kl": 0.01,
+        "train_iters": 80,
+        "batch_size": 64
+    },
+    "training": {
+        "episodes": 1000,
+        "steps_per_episode": 200
+    }
+}

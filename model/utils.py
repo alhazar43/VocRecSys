@@ -1,38 +1,40 @@
-
 import numpy as np
-import math
+from typing import Tuple
+from collections import deque
 import random
 import torch
-from torch.utils.data import DataLoader, Dataset
-
-
 
 class ReplayBuffer:
-    def __init__(self, buffer_size=10000):
-        self.buffer = []
-        self.buffer_size = buffer_size
-        self._ptr = 0
+    """Replay buffer for storing transitions"""
+    def __init__(self, capacity: int = 10000):
+        self.buffer = deque(maxlen=capacity)
         
-    def add(self, state, action, reward, next_state, done):
-        # Ensure action is a scalar index
-        if isinstance(action, np.ndarray):
-            action = action.item() if action.size == 1 else action[0]
-            
-        state = np.array(state)
-        next_state = np.array(next_state)
+    def push(self, 
+            state: np.ndarray,
+            action: np.ndarray,
+            reward: float,
+            next_state: np.ndarray
+    ) -> None:
+        """Store transition in buffer"""
+        self.buffer.append((state, action, reward, next_state))
         
-        if len(self.buffer) < self.buffer_size:
-            self.buffer.append(None)
-        self.buffer[self._ptr] = (state, action, reward, next_state, done)
-        self._ptr = (self._ptr + 1) % self.buffer_size
+    def sample(self, batch_size: int) -> Tuple[torch.Tensor, ...]:
+        """Sample batch of transitions"""
+        transitions = random.sample(self.buffer, batch_size)
+        batch = list(zip(*transitions))
         
-    def sample(self, batch_size):
-        indices = np.random.choice(len(self.buffer), batch_size, replace=False)
-        return [self.buffer[idx] for idx in indices]
-    def clear(self):
-        self.buffer = []
-        self._ptr = 0
+        states = torch.FloatTensor(np.stack(batch[0]))
+        actions = torch.FloatTensor(np.stack(batch[1]))
+        rewards = torch.FloatTensor(batch[2])
+        next_states = torch.FloatTensor(np.stack(batch[3]))
         
-        
-    def __len__(self):
+        return states, actions, rewards, next_states
+    
+    def __len__(self) -> int:
         return len(self.buffer)
+
+    def get_recent_rewards(self, n: int = 100) -> np.ndarray:
+        """Get the n most recent rewards"""
+        n = min(n, len(self.buffer))
+        recent_transitions = list(self.buffer)[-n:]
+        return np.array([t[2] for t in recent_transitions])

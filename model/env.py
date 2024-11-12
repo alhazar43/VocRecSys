@@ -5,6 +5,7 @@ from IRT import AdaptiveMIRT
 from tqdm import tqdm
 
 
+
 class VocRecEnv:
     """
     Optimized environment for job recommendation with MIRT-based ability estimation.
@@ -14,7 +15,7 @@ class VocRecEnv:
         self, 
         n_traits: int = 6,
         n_jobs: int = 100,
-        top_k: int = 5,
+        top_k: int = 20,
         ability_range: Tuple[float, float] = (-3, 3)
     ):
         self.n_traits = n_traits
@@ -32,6 +33,7 @@ class VocRecEnv:
             ), 
             dtype=np.float32
         )
+
         
         # Pre-allocate arrays
         self.current_ability = None
@@ -39,20 +41,27 @@ class VocRecEnv:
         self._top_k_indices = np.zeros(top_k, dtype=np.int32)
         self._abs_diffs = np.zeros((n_jobs, n_traits), dtype=np.float32)
 
+
     def reset(self) -> np.ndarray:
         """Reset environment state."""
         self.mirt = AdaptiveMIRT(n_traits=self.n_traits)
         self.current_ability = self.mirt._get_theta()
         
         # Generate new job requirements
-        rng = np.random.default_rng()
+
         self.job_reqs = np.ascontiguousarray(
-            rng.uniform(
+            np.random.uniform(
                 self.ability_range[0],
                 self.ability_range[1],
                 size=(self.n_jobs, self.n_traits)
             ).astype(np.float32)
         )
+        # self.job_reqs = generate_clustered_job_reqs(
+        #     rng=self.rng,
+        #     n_jobs=self.n_jobs,
+        #     n_traits=self.n_traits,
+        #     ability_range=self.ability_range
+        # )
         return self.current_ability
 
     def _compute_reward(self, scores: np.ndarray) -> Tuple[float, np.ndarray]:
